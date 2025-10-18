@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: aras_auth_postgres_dev
+    environment:
+      POSTGRES_DB: aras_auth_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aras_auth_dev_network
+
+  aras_auth:
+    build: .
+    container_name: aras_auth_service_dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Server Configuration
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8080
+      
+      # Database Configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: aras_auth_dev
+      DB_SSL_MODE: disable
+      
+      # JWT Configuration
+      JWT_SECRET_KEY: dev-secret-key-not-for-production
+      JWT_ACCESS_EXPIRY: 15m
+      JWT_REFRESH_EXPIRY: 7d
+      
+      # Admin Configuration
+      ADMIN_EMAIL: admin@aras-services.com
+      ADMIN_PASSWORD: admin123
+    ports:
+      - "8081:8080"
+    volumes:
+      - .:/app
+      - /app/vendor
+    command: ["go", "run", "./cmd/server"]
+    networks:
+      - aras_auth_dev_network
+
+volumes:
+  postgres_dev_data:
+    driver: local
+
+networks:
+  aras_auth_dev_network:
+    driver: bridge
+
+

@@ -1,0 +1,28 @@
+server:
+  host: "0.0.0.0"
+  port: 8080
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: "password"
+  name: "aras_auth"
+  ssl_mode: "disable"
+
+jwt:
+  secret_key: "your-secret-key-change-in-production"
+  access_expiry: "15m"
+  refresh_expiry: "7d"
+
+smtp:
+  host: "localhost"
+  port: 587
+  username: ""
+  password: ""
+  from: "noreply@aras-services.com"
+
+admin:
+  email: "admin@aras-services.com"
+  password: "admin123"
+
