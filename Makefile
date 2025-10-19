@@ -1,4 +1,7 @@
-.PHONY: help build run test clean docker-build docker-build-versioned docker-run docker-stop migrate-up migrate-down
+# Image configuration
+IMAGE_NAME = ghcr.io/aras-group-co/aras-auth
+
+.PHONY: help build run test clean docker-build docker-build-versioned docker-push docker-push-versioned docker-run docker-stop migrate-up migrate-down
 
 # Default target
 help:
@@ -9,6 +12,8 @@ help:
 	@echo "  clean          - Clean build artifacts"
 	@echo "  docker-build   - Build Docker image"
 	@echo "  docker-build-versioned - Build Docker image with version info"
+	@echo "  docker-push    - Push Docker image to registry"
+	@echo "  docker-push-versioned - Push versioned Docker image to registry"
 	@echo "  docker-run     - Run with Docker Compose"
 	@echo "  docker-stop    - Stop Docker Compose services"
 	@echo "  migrate-up     - Run database migrations up"
@@ -34,15 +39,31 @@ clean:
 
 # Build Docker image
 docker-build:
-	docker build -t aras-auth:latest .
+	docker build -t $(IMAGE_NAME):latest -t aras-auth:latest .
 
 # Build Docker image with version info
 docker-build-versioned:
+	@VERSION=$$(git describe --tags --always --dirty 2>/dev/null || echo "dev"); \
+	echo "Building with version: $$VERSION"; \
 	docker build \
-		--build-arg BUILD_VERSION=$$(git describe --tags --always --dirty 2>/dev/null || echo "dev") \
-		--build-arg BUILD_TIME=$$(date +%Y-%m-%dT%H:%M:%SZ) \
+		--build-arg BUILD_VERSION=$$VERSION \
+		--build-arg BUILD_TIME=$$(date -u +%Y-%m-%dT%H:%M:%SZ) \
 		--build-arg GIT_COMMIT=$$(git rev-parse --short HEAD 2>/dev/null || echo "unknown") \
-		-t aras-auth:latest .
+		-t $(IMAGE_NAME):latest \
+		-t $(IMAGE_NAME):$$VERSION \
+		-t aras-auth:latest \
+		.
+
+# Push Docker image to registry
+docker-push:
+	docker push $(IMAGE_NAME):latest
+
+# Push versioned Docker image to registry
+docker-push-versioned:
+	@VERSION=$$(git describe --tags --always --dirty 2>/dev/null || echo "dev"); \
+	echo "Pushing version: $$VERSION"; \
+	docker push $(IMAGE_NAME):latest; \
+	docker push $(IMAGE_NAME):$$VERSION
 
 # Run with Docker Compose
 docker-run:

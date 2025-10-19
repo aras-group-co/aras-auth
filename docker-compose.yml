@@ -29,7 +29,7 @@ services:
         BUILD_VERSION: ${BUILD_VERSION}
         BUILD_TIME: ${BUILD_TIME}
         GIT_COMMIT: ${GIT_COMMIT}
-    image: ghcr.io/aras-group-co/aras-auth:latest
+    image: ghcr.io/aras-group-co/aras-auth:${ARAS_AUTH_VERSION:-v1.1.0}
     container_name: aras_auth_service
     depends_on:
       postgres:

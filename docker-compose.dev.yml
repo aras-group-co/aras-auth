@@ -21,7 +21,7 @@ services:
       - aras_auth_dev_network
 
   aras_auth:
-    build: .
+    image: ghcr.io/aras-group-co/aras-auth:${ARAS_AUTH_VERSION:-latest}
     container_name: aras_auth_service_dev
     depends_on:
       postgres:
