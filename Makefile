@@ -1,7 +1,7 @@
 # Image configuration
 IMAGE_NAME = ghcr.io/aras-group-co/aras-auth
 
-.PHONY: help build run test clean docker-build docker-build-versioned docker-push docker-push-versioned docker-run docker-stop migrate-up migrate-down
+.PHONY: help build run test clean docker-build-versioned docker-push-versioned docker-run docker-stop migrate-up migrate-down
 
 # Default target
 help:
@@ -10,10 +10,8 @@ help:
 	@echo "  run            - Run the application locally"
 	@echo "  test           - Run tests"
 	@echo "  clean          - Clean build artifacts"
-	@echo "  docker-build   - Build Docker image"
 	@echo "  docker-build-versioned - Build Docker image with version info"
-	@echo "  docker-push    - Push Docker image to registry"
-	@echo "  docker-push-versioned - Push versioned Docker image to registry"
+	@echo "  docker-push-versioned - Push versioned Docker image to registry (clean tags only)"
 	@echo "  docker-run     - Run with Docker Compose"
 	@echo "  docker-stop    - Stop Docker Compose services"
 	@echo "  migrate-up     - Run database migrations up"
@@ -37,32 +35,44 @@ clean:
 	rm -rf bin/
 	go clean
 
-# Build Docker image
-docker-build:
-	docker build -t $(IMAGE_NAME):latest -t aras-auth:latest .
-
 # Build Docker image with version info
 docker-build-versioned:
 	@VERSION=$$(git describe --tags --always --dirty 2>/dev/null || echo "dev"); \
-	echo "Building with version: $$VERSION"; \
+	echo "Building image: $(IMAGE_NAME):$$VERSION"; \
 	docker build \
 		--build-arg BUILD_VERSION=$$VERSION \
 		--build-arg BUILD_TIME=$$(date -u +%Y-%m-%dT%H:%M:%SZ) \
 		--build-arg GIT_COMMIT=$$(git rev-parse --short HEAD 2>/dev/null || echo "unknown") \
-		-t $(IMAGE_NAME):latest \
 		-t $(IMAGE_NAME):$$VERSION \
-		-t aras-auth:latest \
 		.
 
-# Push Docker image to registry
-docker-push:
-	docker push $(IMAGE_NAME):latest
-
-# Push versioned Docker image to registry
+# Push versioned Docker image to registry (only clean git tags)
 docker-push-versioned:
 	@VERSION=$$(git describe --tags --always --dirty 2>/dev/null || echo "dev"); \
-	echo "Pushing version: $$VERSION"; \
-	docker push $(IMAGE_NAME):latest; \
+	echo "Version detected: $$VERSION"; \
+	if echo "$$VERSION" | grep -q 'dirty' || echo "$$VERSION" | grep -q '\-g' || [ "$$VERSION" = "dev" ]; then \
+		echo "❌ ERROR: Cannot push non-release version: $$VERSION"; \
+		echo ""; \
+		echo "Only clean git tags can be pushed to registry."; \
+		echo ""; \
+		echo "Current issues:"; \
+		if echo "$$VERSION" | grep -q 'dirty'; then \
+			echo "  - You have uncommitted changes"; \
+		fi; \
+		if echo "$$VERSION" | grep -q '\-g'; then \
+			echo "  - You have commits after the last tag"; \
+		fi; \
+		if [ "$$VERSION" = "dev" ]; then \
+			echo "  - No git tags found"; \
+		fi; \
+		echo ""; \
+		echo "To fix:"; \
+		echo "  1. Commit all changes: git add . && git commit"; \
+		echo "  2. Create a tag: git tag v1.x.x"; \
+		echo "  3. Push tag: git push origin v1.x.x"; \
+		exit 1; \
+	fi; \
+	echo "✅ Pushing clean version: $$VERSION"; \
 	docker push $(IMAGE_NAME):$$VERSION
 
 # Run with Docker Compose

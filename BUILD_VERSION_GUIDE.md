@@ -96,77 +96,108 @@ services:
     # image: ghcr.io/aras-group-co/aras-auth:v1.1.0
 ```
 
-## Version Management Best Practices
+## Single Clean Version Strategy
 
-### چرا از `latest` در Production استفاده نکنیم؟
+### فلسفه نهایی
 
-❌ **مشکلات `latest` در Production:**
+**فقط ایمیج‌های با Git Tag تمیز قابل Push هستند**
+
+- ✅ فقط version تمیز (مثلاً `v1.3.0`)
+- ❌ بدون `latest` در هیچ‌جا
+- ❌ بدون `-dirty` در push
+- ❌ بدون `-N-gXXXXXX` در push
+- ✅ Dev و Production دقیقاً همان ایمیج
+
+### چرا این استراتژی؟
+
+❌ **مشکلات `latest` و dirty versions:**
 - **غیرقابل پیش‌بینی**: نمی‌دانید دقیقاً کدام version را اجرا می‌کنید
 - **عدم امکان Rollback**: اگر مشکلی پیش آید، نمی‌توانید به version قبلی برگردید
-- **ناسازگاری بین سرورها**: سرورهای مختلف ممکن است version های متفاوت `latest` داشته باشند
+- **ناسازگاری بین سرورها**: سرورهای مختلف ممکن است version های متفاوت داشته باشند
 - **مشکلات Debugging**: نمی‌توانید دقیقاً بگویید کدام version مشکل دارد
 - **Breaking Changes**: اگر version جدیدی push شود، ممکن است سیستم شما خراب شود
+- **Overwrite خطرناک**: dirty versions ممکن است clean versions را overwrite کنند
 
-### استراتژی Version Management پیاده‌سازی شده
+### استراتژی پیاده‌سازی شده
 
-✅ **Production (docker-compose.yml):**
+✅ **همه محیط‌ها (docker-compose.yml و docker-compose.dev.yml):**
 ```yaml
 services:
   aras_auth:
-    image: ghcr.io/aras-group-co/aras-auth:${ARAS_AUTH_VERSION:-v1.1.0}
+    image: ghcr.io/aras-group-co/aras-auth:${ARAS_AUTH_VERSION}
 ```
-- **Default**: همیشه از version مشخص استفاده می‌کند (v1.1.0)
-- **Safe**: اگر متغیر set نشود، از version stable استفاده می‌کند
-
-✅ **Development (docker-compose.dev.yml):**
-```yaml
-services:
-  aras_auth:
-    image: ghcr.io/aras-group-co/aras-auth:${ARAS_AUTH_VERSION:-latest}
-```
-- **Default**: از `latest` استفاده می‌کند (برای تست feature های جدید)
-- **انعطاف‌پذیر**: می‌توان version مشخص را تست کرد
+- **بدون default value**: باید صریحاً version را set کنید
+- **یکسان در همه جا**: Dev و Production دقیقاً همان version
 
 ### نحوه استفاده
 
-**Production (بدون تنظیم متغیر):**
+**Development (local testing):**
 ```bash
-docker-compose up
-# استفاده می‌کند از: ghcr.io/aras-group-co/aras-auth:v1.1.0
+# Build هر version ای (حتی dirty)
+make docker-build-versioned
+# نتیجه: ghcr.io/aras-group-co/aras-auth:v1.2.0-dirty
+
+# تست محلی
+export ARAS_AUTH_VERSION=v1.2.0-dirty
+docker compose up
 ```
 
-**Development (با latest):**
+**Release به Production:**
 ```bash
-# استفاده از default (latest)
-docker-compose -f docker-compose.dev.yml up
+# 1. اطمینان از clean state
+git status
 
-# یا صراحتاً latest
-export ARAS_AUTH_VERSION=latest
-docker-compose up
+# 2. Commit همه چیز
+git add .
+git commit -m "feat: ready for v1.3.0"
+
+# 3. ایجاد tag
+git tag v1.3.0
+git push origin v1.3.0
+
+# 4. Build
+make docker-build-versioned
+# نتیجه: ghcr.io/aras-group-co/aras-auth:v1.3.0
+
+# 5. Push (فقط الان کار می‌کند!)
+make docker-push-versioned
+# ✅ Success: Pushing v1.3.0
+
+# 6. Deploy در همه محیط‌ها
+export ARAS_AUTH_VERSION=v1.3.0
+docker compose up  # Production
+docker compose -f docker-compose.dev.yml up  # Development
 ```
 
-**Testing version خاص:**
-```bash
-export ARAS_AUTH_VERSION=v1.0.5
-docker-compose up
-# استفاده می‌کند از: ghcr.io/aras-group-co/aras-auth:v1.0.5
-```
+### Validation و Error Messages
 
-**Staging (همان Production):**
+اگر سعی کنید dirty version را push کنید:
+
 ```bash
-export ARAS_AUTH_VERSION=v1.1.0
-docker-compose up
-# استفاده می‌کند از: ghcr.io/aras-group-co/aras-auth:v1.1.0
+make docker-push-versioned
+
+# ❌ ERROR: Cannot push non-release version: v1.2.0-dirty
+# 
+# Only clean git tags can be pushed to registry.
+# 
+# Current issues:
+#   - You have uncommitted changes
+# 
+# To fix:
+#   1. Commit all changes: git add . && git commit
+#   2. Create a tag: git tag v1.x.x
+#   3. Push tag: git push origin v1.x.x
 ```
 
 ## مزایا
 
 1. **اطلاعات نسخه درون ایمیج**: مقادیر در زمان build در ایمیج قرار می‌گیرند
-2. **انعطاف‌پذیری**: امکان تنظیم مقادیر از طریق ARGها
-3. **خودکارسازی**: امکان تولید خودکار مقادیر از git
-4. **سازگاری**: حفظ سازگاری با روش‌های مختلف build
-5. **Multi-tag support**: ساخت همزمان چندین tag (latest, version, local)
-6. **Registry ready**: آماده برای push به GitHub Container Registry
-7. **Production-safe**: default به version مشخص است
-8. **Environment-specific**: هر محیط می‌تواند version خود را تعیین کند
-9. **Reproducible**: امکان تکرار دقیق environment در هر زمان
+2. **امنیت کامل**: فقط release های رسمی در registry
+3. **سادگی**: یک tag، یک ایمیج
+4. **Validation**: خطای واضح با راهنمای رفع
+5. **Consistency**: Dev و Prod همیشه یکسان
+6. **No surprises**: نمی‌توان اشتباهی dirty push کرد
+7. **Traceability**: هر ایمیج به یک git tag مشخص اشاره دارد
+8. **Reproducible**: امکان تکرار دقیق environment در هر زمان
+9. **Clean builds**: فقط از committed code ایمیج production ساخته می‌شود
+10. **Registry ready**: آماده برای push به GitHub Container Registry

@@ -141,22 +141,22 @@ build_docker_versioned() {
     local git_commit=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
     local image_name="ghcr.io/aras-group-co/aras-auth"
     
-    print_status "Build info: Version=$version, Time=$build_time, Commit=$git_commit"
-    print_status "Building images: $image_name:latest, $image_name:$version, aras-auth:latest"
+    print_status "Building image: $image_name:$version"
     
     docker build \
         --build-arg BUILD_VERSION="$version" \
         --build-arg BUILD_TIME="$build_time" \
         --build-arg GIT_COMMIT="$git_commit" \
-        -t "$image_name:latest" \
         -t "$image_name:$version" \
-        -t aras-auth:latest \
         .
     
-    print_success "Docker images built successfully:"
-    print_success "  - $image_name:latest"
-    print_success "  - $image_name:$version"
-    print_success "  - aras-auth:latest"
+    print_success "Image built: $image_name:$version"
+    
+    # Warning for non-clean versions
+    if echo "$version" | grep -qE '(-dirty|-[0-9]+-g[0-9a-f]+|^dev$)'; then
+        print_warning "This is not a release version and cannot be pushed to registry"
+        print_warning "To create a release, commit changes and create a git tag"
+    fi
 }
 
 # Function to run database migrations
