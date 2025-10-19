@@ -16,7 +16,7 @@ pip install aras-auth
 from aras_auth import AuthClient
 
 # Initialize the client
-client = AuthClient("http://localhost:8080")
+client = AuthClient("http://localhost:7600")
 
 # Login
 auth_response = client.login("user@example.com", "password")

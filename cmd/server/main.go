@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -29,10 +30,40 @@ import (
 	"github.com/aras-services/aras-auth/internal/usecase"
 )
 
+// Version information - set during build time via ldflags
+var (
+	version   = "1.1.0"
+	buildTime = "unknown"
+	gitCommit = "unknown"
+)
+
+// printVersion prints version information and exits
+func printVersion() {
+	fmt.Printf("aras_auth version %s\n", version)
+	if buildTime != "unknown" {
+		fmt.Printf("Build Time: %s\n", buildTime)
+	}
+	if gitCommit != "unknown" {
+		fmt.Printf("Git Commit: %s\n", gitCommit)
+	}
+	os.Exit(0)
+}
+
 // main implements the application bootstrap following Clean Architecture principles.
 // It demonstrates Dependency Injection, Factory patterns, and proper resource management
 // while maintaining clear separation of concerns across architectural layers.
 func main() {
+
+
+	// Check for version flag before any initialization
+	if len(os.Args) > 1 {
+		for _, arg := range os.Args[1:] {
+			if arg == "--version" || arg == "-v" {
+				printVersion()
+			}
+		}
+	}
+
 	// PHASE 1: Configuration and Infrastructure Setup
 	// Load configuration using the centralized config management pattern
 	// This follows the 12-Factor App methodology for configuration

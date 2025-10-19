@@ -69,6 +69,17 @@ check_prerequisites() {
     fi
 }
 
+# Function to generate build information
+generate_build_info() {
+    local version=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+    local build_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    local git_commit=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    
+    echo "BUILD_VERSION=$version"
+    echo "BUILD_TIME=$build_time"
+    echo "GIT_COMMIT=$git_commit"
+}
+
 # Function to setup environment
 setup_environment() {
     print_status "Setting up environment..."
@@ -77,6 +88,14 @@ setup_environment() {
         if [ -f .env.example ]; then
             cp .env.example .env
             print_success "Created .env file from .env.example"
+            
+            # Add build information to .env
+            print_status "Adding build information to .env..."
+            echo "" >> .env
+            echo "# Build Information (for Docker builds)" >> .env
+            generate_build_info >> .env
+            
+            print_success "Build information added to .env"
             print_warning "Please update .env with your configuration"
         else
             print_error ".env.example not found"
@@ -84,6 +103,15 @@ setup_environment() {
         fi
     else
         print_warning ".env file already exists"
+        
+        # Check if build info exists in .env
+        if ! grep -q "BUILD_VERSION" .env; then
+            print_status "Adding build information to existing .env..."
+            echo "" >> .env
+            echo "# Build Information (for Docker builds)" >> .env
+            generate_build_info >> .env
+            print_success "Build information added to .env"
+        fi
     fi
 }
 
@@ -101,6 +129,26 @@ build_application() {
     go build -o bin/aras-auth ./cmd/server
     go build -o bin/migrate ./cmd/migrate
     print_success "Application built successfully"
+}
+
+# Function to build Docker image with version info
+build_docker_versioned() {
+    print_status "Building Docker image with version information..."
+    
+    # Generate build info
+    local version=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+    local build_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    local git_commit=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    
+    print_status "Build info: Version=$version, Time=$build_time, Commit=$git_commit"
+    
+    docker build \
+        --build-arg BUILD_VERSION="$version" \
+        --build-arg BUILD_TIME="$build_time" \
+        --build-arg GIT_COMMIT="$git_commit" \
+        -t aras-auth:latest .
+    
+    print_success "Docker image built successfully with version info"
 }
 
 # Function to run database migrations
@@ -124,13 +172,13 @@ start_docker() {
     print_status "Waiting for services to be ready..."
     sleep 10
     
-    # Run migrations
+    # Run migrations and print version
     print_status "Running database migrations..."
-    docker-compose exec aras_auth ./main migrate up
+    docker-compose exec aras_auth ./aras-auth --version
     print_success "Database migrations completed"
     
-    print_success "ArasAuth is running at http://localhost:8080"
-    print_status "Health check: http://localhost:8080/health"
+    print_success "ArasAuth is running at http://localhost:7600"
+    print_status "Health check: http://localhost:7600/health"   
 }
 
 # Function to start locally
@@ -165,6 +213,7 @@ show_help() {
     echo "  check       Check prerequisites"
     echo "  setup       Setup environment and install dependencies"
     echo "  build       Build the application"
+    echo "  docker-build Build Docker image with version info"
     echo "  migrate     Run database migrations"
     echo "  start       Start the application locally"
     echo "  docker      Start with Docker Compose"
@@ -192,6 +241,9 @@ case "${1:-help}" in
     build)
         install_dependencies
         build_application
+        ;;
+    docker-build)
+        build_docker_versioned
         ;;
     migrate)
         run_migrations

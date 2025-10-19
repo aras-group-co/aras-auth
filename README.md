@@ -90,8 +90,8 @@ A production-ready, reusable authentication and authorization microservice built
    ```
 
 4. **Access the service**
-   - API: http://localhost:8080
-   - Health check: http://localhost:8080/health
+   - API: http://localhost:7600
+   - Health check: http://localhost:7600/health
 
 ### Manual Setup
 
@@ -128,7 +128,7 @@ A production-ready, reusable authentication and authorization microservice built
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `SERVER_HOST` | Server host | `0.0.0.0` |
-| `SERVER_PORT` | Server port | `8080` |
+| `SERVER_PORT` | Server port | `7600` |
 | `DB_HOST` | Database host | `localhost` |
 | `DB_PORT` | Database port | `5432` |
 | `DB_USER` | Database user | `postgres` |
@@ -148,7 +148,7 @@ You can also use a YAML configuration file (`config/config.yaml`):
 ```yaml
 server:
   host: "0.0.0.0"
-  port: 8080
+  port: 7600
 
 database:
   host: "localhost"
@@ -393,7 +393,7 @@ import (
 
 func main() {
     // Initialize client
-    client := arasauth.NewClient("http://localhost:8080")
+    client := arasauth.NewClient("http://localhost:7600")
     
     // Login
     authResp, err := client.Login(context.Background(), "user@example.com", "password")
@@ -427,7 +427,7 @@ func main() {
 from aras_auth import AuthClient
 
 # Initialize client
-client = AuthClient("http://localhost:8080")
+client = AuthClient("http://localhost:7600")
 
 # Login
 auth_response = client.login("user@example.com", "password")
@@ -560,7 +560,7 @@ spec:
       - name: aras-auth
         image: aras-auth:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 7600
         env:
         - name: DB_HOST
           value: "postgres-service"

@@ -37,7 +37,7 @@ import (
 
 func main() {
     // Initialize client
-    client := arasauth.NewClient("http://localhost:8080")
+    client := arasauth.NewClient("http://localhost:7600")
     
     // Login
     authResp, err := client.Login(context.Background(), "user@example.com", "password")
@@ -397,13 +397,13 @@ user, err := client.GetUser(ctx, userID)
 ### Client Configuration
 
 ```go
-client := arasauth.NewClient("http://localhost:8080")
+client := arasauth.NewClient("http://localhost:7600")
 
 // Set authentication token for protected endpoints
 client.SetToken("your-access-token")
 
 // Custom HTTP client (optional)
-client := arasauth.NewClient("http://localhost:8080")
+client := arasauth.NewClient("http://localhost:7600")
 // The client uses a default 30-second timeout
 ```
 

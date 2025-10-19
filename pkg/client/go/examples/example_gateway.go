@@ -298,7 +298,7 @@ func (gw *APIGateway) SetupRoutes() *mux.Router {
 
 func main() {
 	// Initialize API Gateway
-	gateway := NewAPIGateway("http://localhost:8080")
+	gateway := NewAPIGateway("http://localhost:7600")
 	router := gateway.SetupRoutes()
 
 	// Start server

@@ -29,7 +29,7 @@ services:
     environment:
       # Server Configuration
       SERVER_HOST: 0.0.0.0
-      SERVER_PORT: 8080
+      SERVER_PORT: 7600
       
       # Database Configuration
       DB_HOST: postgres
@@ -48,11 +48,11 @@ services:
       ADMIN_EMAIL: admin@aras-services.com
       ADMIN_PASSWORD: admin123
     ports:
-      - "8081:8080"
+      - "7601:7600"
     volumes:
       - .:/app
       - /app/vendor
-    command: ["go", "run", "./cmd/server"]
+    command: ["./aras-auth", "migrate", "up"]
     networks:
       - aras_auth_dev_network
 

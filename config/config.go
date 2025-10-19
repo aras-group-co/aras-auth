@@ -28,7 +28,7 @@ type Config struct {
 // unmarshaling from configuration sources without manual parsing.
 type ServerConfig struct {
 	Host string `mapstructure:"host"` // Server bind address (default: "0.0.0.0")
-	Port int    `mapstructure:"port"` // Server port number (default: 8080)
+	Port int    `mapstructure:"port"` // Server port number (default: 7600)
 }
 
 // DatabaseConfig contains PostgreSQL connection parameters using strong typing for
@@ -92,7 +92,7 @@ func Load() (*Config, error) {
 	// This follows the "convention over configuration" principle, reducing the burden
 	// of configuration while ensuring the application can start with minimal setup.
 	viper.SetDefault("server.host", "0.0.0.0")       // Bind to all interfaces by default
-	viper.SetDefault("server.port", 8080)            // Standard HTTP port
+	viper.SetDefault("server.port", 7600)            // Standard HTTP port
 	viper.SetDefault("database.host", "localhost")   // Local development default
 	viper.SetDefault("database.port", 5432)          // PostgreSQL standard port
 	viper.SetDefault("database.ssl_mode", "disable") // Disable SSL for local development

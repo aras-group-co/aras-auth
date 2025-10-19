@@ -5,16 +5,16 @@ services:
     image: postgres:15-alpine
     container_name: aras_auth_postgres
     environment:
-      POSTGRES_DB: aras_auth
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: your_database_name
+      POSTGRES_USER: your_database_username
+      POSTGRES_PASSWORD: your_database_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations/postgres:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U your_database_username"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,7 +22,14 @@ services:
       - aras_auth_network
 
   aras_auth:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_VERSION: ${BUILD_VERSION}
+        BUILD_TIME: ${BUILD_TIME}
+        GIT_COMMIT: ${GIT_COMMIT}
+    image: ghcr.io/aras-group-co/aras-auth:latest
     container_name: aras_auth_service
     depends_on:
       postgres:
@@ -30,30 +37,30 @@ services:
     environment:
       # Server Configuration
       SERVER_HOST: 0.0.0.0
-      SERVER_PORT: 8080
+      SERVER_PORT: 7600
       
       # Database Configuration
-      DB_HOST: postgres
+      DB_HOST: your_database_host
       DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: password
-      DB_NAME: aras_auth
+      DB_USER: your_database_username
+      DB_PASSWORD: your_database_password
+      DB_NAME: your_database_name
       DB_SSL_MODE: disable
       
       # JWT Configuration
-      JWT_SECRET_KEY: your-secret-key-change-in-production
+      JWT_SECRET_KEY: your_jwt_secret_key
       JWT_ACCESS_EXPIRY: 15m
       JWT_REFRESH_EXPIRY: 7d
       
       # Admin Configuration
-      ADMIN_EMAIL: admin@aras-services.com
-      ADMIN_PASSWORD: admin123
+      ADMIN_EMAIL: your_admin_email
+      ADMIN_PASSWORD: your_admin_password
     ports:
-      - "8080:8080"
+      - "7600:7600"
     volumes:
       - ./config:/app/config:ro
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7600/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -69,13 +76,13 @@ services:
         condition: service_healthy
     environment:
       # Database Configuration
-      DB_HOST: postgres
+      DB_HOST: your_database_host
       DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: password
-      DB_NAME: aras_auth
+      DB_USER: your_database_username
+      DB_PASSWORD: your_database_password
+      DB_NAME: your_database_name
       DB_SSL_MODE: disable
-    command: ["./main", "migrate", "up"]
+    command: ["./aras-auth", "migrate", "up"]
     volumes:
       - ./migrations:/app/migrations:ro
     networks:

@@ -1,4 +1,4 @@
-.PHONY: help build run test clean docker-build docker-run docker-stop migrate-up migrate-down
+.PHONY: help build run test clean docker-build docker-build-versioned docker-run docker-stop migrate-up migrate-down
 
 # Default target
 help:
@@ -8,6 +8,7 @@ help:
 	@echo "  test           - Run tests"
 	@echo "  clean          - Clean build artifacts"
 	@echo "  docker-build   - Build Docker image"
+	@echo "  docker-build-versioned - Build Docker image with version info"
 	@echo "  docker-run     - Run with Docker Compose"
 	@echo "  docker-stop    - Stop Docker Compose services"
 	@echo "  migrate-up     - Run database migrations up"
@@ -34,6 +35,14 @@ clean:
 # Build Docker image
 docker-build:
 	docker build -t aras-auth:latest .
+
+# Build Docker image with version info
+docker-build-versioned:
+	docker build \
+		--build-arg BUILD_VERSION=$$(git describe --tags --always --dirty 2>/dev/null || echo "dev") \
+		--build-arg BUILD_TIME=$$(date +%Y-%m-%dT%H:%M:%SZ) \
+		--build-arg GIT_COMMIT=$$(git rev-parse --short HEAD 2>/dev/null || echo "unknown") \
+		-t aras-auth:latest .
 
 # Run with Docker Compose
 docker-run:
