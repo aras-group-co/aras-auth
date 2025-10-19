@@ -299,4 +299,119 @@ func (c *Client) CheckPermission(ctx context.Context, userID, resource, action s
 	return hasPermission, nil
 }
 
+// ChangePassword changes the current user's password
+func (c *Client) ChangePassword(ctx context.Context, currentPassword, newPassword string) error {
+	req := ChangePasswordRequest{
+		CurrentPassword: currentPassword,
+		NewPassword:     newPassword,
+	}
 
+	resp, err := c.makeRequest(ctx, "POST", "/api/v1/auth/change-password", req)
+	if err != nil {
+		return err
+	}
+
+	var apiResp APIResponse
+	if err := c.handleResponse(resp, &apiResp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ForgotPassword requests a password reset email
+func (c *Client) ForgotPassword(ctx context.Context, email string) error {
+	req := ForgotPasswordRequest{
+		Email: email,
+	}
+
+	resp, err := c.makeRequest(ctx, "POST", "/api/v1/auth/forgot-password", req)
+	if err != nil {
+		return err
+	}
+
+	var apiResp APIResponse
+	if err := c.handleResponse(resp, &apiResp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ResetPassword resets password using a reset token
+func (c *Client) ResetPassword(ctx context.Context, token, newPassword string) error {
+	req := ResetPasswordRequest{
+		Token:       token,
+		NewPassword: newPassword,
+	}
+
+	resp, err := c.makeRequest(ctx, "POST", "/api/v1/auth/reset-password", req)
+	if err != nil {
+		return err
+	}
+
+	var apiResp APIResponse
+	if err := c.handleResponse(resp, &apiResp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// VerifyEmail verifies a user's email address
+func (c *Client) VerifyEmail(ctx context.Context, userID string) error {
+	req := VerifyEmailRequest{
+		UserID: userID,
+	}
+
+	resp, err := c.makeRequest(ctx, "POST", "/api/v1/auth/verify-email", req)
+	if err != nil {
+		return err
+	}
+
+	var apiResp APIResponse
+	if err := c.handleResponse(resp, &apiResp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// IntrospectToken introspects a token and returns its information
+func (c *Client) IntrospectToken(ctx context.Context, token string) (*TokenIntrospection, error) {
+	req := map[string]string{
+		"token": token,
+	}
+
+	resp, err := c.makeRequest(ctx, "POST", "/api/v1/auth/introspect", req)
+	if err != nil {
+		return nil, err
+	}
+
+	var apiResp APIResponse
+	if err := c.handleResponse(resp, &apiResp); err != nil {
+		return nil, err
+	}
+
+	// Extract token introspection from data
+	introspectionData, ok := apiResp.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid response format")
+	}
+
+	introspection := &TokenIntrospection{}
+	if active, ok := introspectionData["active"].(bool); ok {
+		introspection.Active = active
+	}
+	if userID, ok := introspectionData["user_id"].(string); ok {
+		introspection.UserID = userID
+	}
+	if email, ok := introspectionData["email"].(string); ok {
+		introspection.Email = email
+	}
+	if expiresAt, ok := introspectionData["exp"].(float64); ok {
+		introspection.ExpiresAt = int64(expiresAt)
+	}
+
+	return introspection, nil
+}

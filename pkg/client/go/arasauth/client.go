@@ -122,6 +122,36 @@ type CheckPermissionResponse struct {
 	HasPermission bool `json:"has_permission"`
 }
 
+// ChangePasswordRequest represents the change password request
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
+
+// ForgotPasswordRequest represents the forgot password request
+type ForgotPasswordRequest struct {
+	Email string `json:"email"`
+}
+
+// ResetPasswordRequest represents the reset password request
+type ResetPasswordRequest struct {
+	Token       string `json:"token"`
+	NewPassword string `json:"new_password"`
+}
+
+// VerifyEmailRequest represents the verify email request
+type VerifyEmailRequest struct {
+	UserID string `json:"user_id"`
+}
+
+// TokenIntrospection represents token introspection response
+type TokenIntrospection struct {
+	Active    bool   `json:"active"`
+	UserID    string `json:"user_id,omitempty"`
+	Email     string `json:"email,omitempty"`
+	ExpiresAt int64  `json:"exp,omitempty"`
+}
+
 // makeRequest makes an HTTP request to the API
 func (c *Client) makeRequest(ctx context.Context, method, endpoint string, body interface{}) (*http.Response, error) {
 	var reqBody io.Reader
@@ -176,5 +206,3 @@ func (c *Client) handleResponse(resp *http.Response, result interface{}) error {
 
 	return nil
 }
-
-
