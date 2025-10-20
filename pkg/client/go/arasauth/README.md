@@ -463,6 +463,151 @@ user, err := client.GetUser(ctx, userID)
 
 This SDK is part of the ArasAuth project and is licensed under the MIT License.
 
+## Integration in Production
+
+### Service Configuration
+
+When integrating ArasAuth in your service, use environment variables for the Auth service URL:
+
+```go
+package main
+
+import (
+    "os"
+    "github.com/aras-services/aras-auth/pkg/client/go/arasauth"
+)
+
+func main() {
+    // Get Auth service URL from environment
+    authURL := os.Getenv("ARAS_AUTH_URL")
+    if authURL == "" {
+        authURL = "http://localhost:7600" // fallback for local dev
+    }
+    
+    client := arasauth.NewClient(authURL)
+    // ... your service logic
+}
+```
+
+### Docker Compose Integration
+
+Example `docker-compose.yml` for a service using ArasAuth:
+
+```yaml
+version: '3.8'
+
+services:
+  # ArasAuth service
+  aras_auth:
+    image: ghcr.io/aras-group-co/aras-auth:v1.3.0
+    environment:
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 7600
+      DB_HOST: postgres
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_NAME: ${POSTGRES_DB:-myproduct}
+      JWT_SECRET_KEY: ${JWT_SECRET:-change-me-32-chars-min}
+      ADMIN_EMAIL: admin@myproduct.com
+    networks:
+      - app_network
+  
+  # Your service
+  my_service:
+    image: mycompany/my-service:latest
+    environment:
+      # Point to ArasAuth service
+      ARAS_AUTH_URL: http://aras_auth:7600
+    depends_on:
+      - aras_auth
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+```
+
+### Environment Variables
+
+Required environment variables for services using ArasAuth SDK:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `ARAS_AUTH_URL` | ArasAuth service URL | `http://aras_auth:7600` |
+
+### Best Practices
+
+1. **Always use environment variables** for service URLs
+2. **Handle errors gracefully** with proper retry logic
+3. **Use context with timeouts** for all API calls
+4. **Cache user permissions** to reduce API calls
+5. **Implement circuit breaker** for resilience
+
+### Example: Production-Ready Service
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "os"
+    "time"
+    
+    "github.com/aras-services/aras-auth/pkg/client/go/arasauth"
+)
+
+type MyService struct {
+    authClient *arasauth.Client
+}
+
+func NewMyService() *MyService {
+    authURL := os.Getenv("ARAS_AUTH_URL")
+    if authURL == "" {
+        log.Fatal("ARAS_AUTH_URL environment variable is required")
+    }
+    
+    return &MyService{
+        authClient: arasauth.NewClient(authURL),
+    }
+}
+
+func (s *MyService) AuthenticateRequest(token string) (*arasauth.User, error) {
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    s.authClient.SetToken(token)
+    
+    user, err := s.authClient.GetCurrentUser(ctx)
+    if err != nil {
+        return nil, fmt.Errorf("authentication failed: %w", err)
+    }
+    
+    return user, nil
+}
+
+func (s *MyService) CheckPermission(userID, resource, action string) (bool, error) {
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    hasPermission, err := s.authClient.CheckPermission(ctx, userID, resource, action)
+    if err != nil {
+        return false, fmt.Errorf("permission check failed: %w", err)
+    }
+    
+    return hasPermission, nil
+}
+
+func main() {
+    service := NewMyService()
+    
+    // Your service logic here
+    log.Println("Service started with ArasAuth integration")
+}
+```
+
 ## Support
 
 For issues and questions:

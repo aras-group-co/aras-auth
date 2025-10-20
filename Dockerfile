@@ -42,9 +42,6 @@ WORKDIR /app
 # Copy binary from builder stage    
 COPY --from=builder /app/aras-auth .
 
-# Copy config files
-COPY --from=builder /app/config ./config
-
 # Copy migration files
 COPY --from=builder /app/migrations ./migrations
 

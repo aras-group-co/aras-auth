@@ -1,14 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/aras-services/aras-auth/pkg/client/go/arasauth"
+	"github.com/gorilla/mux"
 )
 
 // APIGateway represents an API Gateway that forwards requests to Auth service
@@ -17,9 +19,18 @@ type APIGateway struct {
 }
 
 // NewAPIGateway creates a new API Gateway instance
-func NewAPIGateway(authServiceURL string) *APIGateway {
+func NewAPIGateway() *APIGateway {
+	// Get Auth service URL from environment variable
+	authURL := os.Getenv("ARAS_AUTH_URL")
+	if authURL == "" {
+		authURL = "http://localhost:7600" // fallback for local development
+		log.Printf("ARAS_AUTH_URL not set, using default: %s", authURL)
+	}
+
+	log.Printf("Initializing API Gateway with ArasAuth URL: %s", authURL)
+
 	return &APIGateway{
-		authClient: arasauth.NewClient(authServiceURL),
+		authClient: arasauth.NewClient(authURL),
 	}
 }
 
@@ -40,20 +51,28 @@ func (gw *APIGateway) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Failed to decode login request: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
+	// Create context with timeout for auth service call
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
 	// Forward to auth service
-	authResp, err := gw.authClient.Login(r.Context(), req.Email, req.Password)
+	authResp, err := gw.authClient.Login(ctx, req.Email, req.Password)
 	if err != nil {
+		log.Printf("Authentication failed for user %s: %v", req.Email, err)
 		http.Error(w, "Authentication failed", http.StatusUnauthorized)
 		return
 	}
 
 	// Return response to frontend
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(authResp)
+	if err := json.NewEncoder(w).Encode(authResp); err != nil {
+		log.Printf("Failed to encode login response: %v", err)
+	}
 }
 
 // HandleRegister handles user registration requests from frontend
@@ -272,9 +291,48 @@ func (gw *APIGateway) HandleTokenIntrospect(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(introspection)
 }
 
+// HandleHealthCheck handles health check requests
+func (gw *APIGateway) HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
+	// Check ArasAuth service health
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Try to introspect a dummy token to check service availability
+	_, err := gw.authClient.IntrospectToken(ctx, "health-check")
+
+	status := "healthy"
+	statusCode := http.StatusOK
+
+	if err != nil {
+		// Service is reachable but token is invalid (expected)
+		if !contains(err.Error(), "invalid") && !contains(err.Error(), "unauthorized") {
+			status = "unhealthy"
+			statusCode = http.StatusServiceUnavailable
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(map[string]string{
+		"status":    status,
+		"service":   "api-gateway",
+		"timestamp": time.Now().Format(time.RFC3339),
+	})
+}
+
+// Helper function to check if string contains substring
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && s[:len(substr)] == substr ||
+		len(s) > len(substr) && s[len(s)-len(substr):] == substr ||
+		len(s) > len(substr) && contains(s[1:], substr)
+}
+
 // SetupRoutes sets up all API Gateway routes
 func (gw *APIGateway) SetupRoutes() *mux.Router {
 	r := mux.NewRouter()
+
+	// Health check endpoint
+	r.HandleFunc("/health", gw.HandleHealthCheck).Methods("GET")
 
 	// Authentication routes
 	r.HandleFunc("/api/auth/login", gw.HandleLogin).Methods("POST")
@@ -297,18 +355,26 @@ func (gw *APIGateway) SetupRoutes() *mux.Router {
 }
 
 func main() {
+	// Get server configuration from environment
+	port := os.Getenv("SERVER_PORT")
+	if port == "" {
+		port = "3000"
+	}
+
 	// Initialize API Gateway
-	gateway := NewAPIGateway("http://localhost:7600")
+	gateway := NewAPIGateway()
 	router := gateway.SetupRoutes()
 
 	// Start server
 	server := &http.Server{
-		Addr:         ":3000",
+		Addr:         ":" + port,
 		Handler:      router,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
-	log.Println("API Gateway starting on :3000")
+	log.Printf("API Gateway starting on port %s", port)
+	log.Printf("Health check available at: http://localhost:%s/health", port)
 	log.Fatal(server.ListenAndServe())
 }

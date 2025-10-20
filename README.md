@@ -137,7 +137,7 @@ A production-ready, reusable authentication and authorization microservice built
 | `DB_SSL_MODE` | SSL mode | `disable` |
 | `JWT_SECRET_KEY` | JWT secret key | `your-secret-key` |
 | `JWT_ACCESS_EXPIRY` | Access token expiry | `15m` |
-| `JWT_REFRESH_EXPIRY` | Refresh token expiry | `7d` |
+| `JWT_REFRESH_EXPIRY` | Refresh token expiry | `168h` |
 | `ADMIN_EMAIL` | Admin email | `admin@aras-services.com` |
 | `ADMIN_PASSWORD` | Admin password | `admin123` |
 
@@ -161,7 +161,7 @@ database:
 jwt:
   secret_key: "your-secret-key-change-in-production"
   access_expiry: "15m"
-  refresh_expiry: "7d"
+  refresh_expiry: "168h"
 
 admin:
   email: "admin@aras-services.com"

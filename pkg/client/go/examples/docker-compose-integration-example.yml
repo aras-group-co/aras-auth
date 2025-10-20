@@ -1,0 +1,159 @@
+version: '3.8'
+
+# Example Docker Compose file for integrating ArasAuth with your service
+# This demonstrates how to deploy both ArasAuth and your service together
+
+services:
+  # ArasAuth Service
+  aras_auth:
+    image: ghcr.io/aras-group-co/aras-auth:${ARAS_AUTH_VERSION}
+    container_name: aras_auth_service
+    environment:
+      # Server Configuration
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 7600
+      
+      # Database Configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_NAME: ${POSTGRES_DB:-myproduct}
+      DB_SSL_MODE: disable
+      
+      # JWT Configuration
+      JWT_SECRET_KEY: ${JWT_SECRET:-change-me-32-chars-min}
+      JWT_ACCESS_EXPIRY: 15m
+      JWT_REFRESH_EXPIRY: 168h
+      
+      # Admin Configuration
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@myproduct.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+    ports:
+      - "7600:7600"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7600/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-myproduct}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Example API Gateway Service
+  api_gateway:
+    image: mycompany/api-gateway:latest
+    container_name: api_gateway
+    environment:
+      # ArasAuth Configuration
+      ARAS_AUTH_URL: http://aras_auth:7600
+      
+      # Server Configuration
+      SERVER_PORT: 8080
+      
+      # Optional: Custom timeouts and retry settings
+      ARAS_AUTH_TIMEOUT: 10
+      ARAS_AUTH_RETRY_COUNT: 3
+    ports:
+      - "8080:8080"
+    depends_on:
+      aras_auth:
+        condition: service_healthy
+    networks:
+      - app_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Example Microservice 1
+  user_service:
+    image: mycompany/user-service:latest
+    container_name: user_service
+    environment:
+      # ArasAuth Configuration
+      ARAS_AUTH_URL: http://aras_auth:7600
+      
+      # Service Configuration
+      SERVICE_PORT: 8081
+      SERVICE_NAME: user-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      aras_auth:
+        condition: service_healthy
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  # Example Microservice 2
+  order_service:
+    image: mycompany/order-service:latest
+    container_name: order_service
+    environment:
+      # ArasAuth Configuration
+      ARAS_AUTH_URL: http://aras_auth:7600
+      
+      # Service Configuration
+      SERVICE_PORT: 8082
+      SERVICE_NAME: order-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      aras_auth:
+        condition: service_healthy
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  # Optional: Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

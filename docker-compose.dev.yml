@@ -42,7 +42,7 @@ services:
       # JWT Configuration
       JWT_SECRET_KEY: dev-secret-key-not-for-production
       JWT_ACCESS_EXPIRY: 15m
-      JWT_REFRESH_EXPIRY: 7d
+      JWT_REFRESH_EXPIRY: 168h
       
       # Admin Configuration
       ADMIN_EMAIL: admin@aras-services.com

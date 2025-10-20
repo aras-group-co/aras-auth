@@ -8,115 +8,85 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/viper"
+	"github.com/caarlos0/env/v6"
 )
 
 // Config represents the root configuration structure following the Separation of Concerns principle.
 // Each field corresponds to a specific functional domain, enabling clear boundaries and
-// improved maintainability. The mapstructure tags enable automatic mapping from YAML
-// configuration files to Go structs, reducing boilerplate code and providing type safety.
+// improved maintainability. The env tags enable automatic mapping from environment variables
+// to Go structs, reducing boilerplate code and providing type safety.
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server"`   // HTTP server configuration (host, port)
-	Database DatabaseConfig `mapstructure:"database"` // Database connection parameters
-	JWT      JWTConfig      `mapstructure:"jwt"`      // JWT token configuration and expiry settings
-	SMTP     SMTPConfig     `mapstructure:"smtp"`     // Email service configuration
-	Admin    AdminConfig    `mapstructure:"admin"`    // Default admin user credentials
+	Server   ServerConfig   `envPrefix:"SERVER_"`
+	Database DatabaseConfig `envPrefix:"DB_"`
+	JWT      JWTConfig      `envPrefix:"JWT_"`
+	SMTP     SMTPConfig     `envPrefix:"SMTP_"`
+	Admin    AdminConfig    `envPrefix:"ADMIN_"`
 }
 
 // ServerConfig encapsulates HTTP server configuration following the Single Responsibility Principle.
-// Each field uses mapstructure tags for declarative data binding, enabling automatic
-// unmarshaling from configuration sources without manual parsing.
+// Each field uses env tags for declarative data binding, enabling automatic
+// unmarshaling from environment variables without manual parsing.
 type ServerConfig struct {
-	Host string `mapstructure:"host"` // Server bind address (default: "0.0.0.0")
-	Port int    `mapstructure:"port"` // Server port number (default: 7600)
+	Host string `env:"HOST" envDefault:"0.0.0.0"` // Server bind address (default: "0.0.0.0")
+	Port int    `env:"PORT" envDefault:"7600"`    // Server port number (default: 7600)
 }
 
 // DatabaseConfig contains PostgreSQL connection parameters using strong typing for
 // better compile-time safety and self-documenting code. The SSLMode field allows
 // flexible SSL configuration for different deployment environments.
 type DatabaseConfig struct {
-	Host     string `mapstructure:"host"`     // Database host address
-	Port     int    `mapstructure:"port"`     // Database port (default: 5432)
-	User     string `mapstructure:"user"`     // Database username
-	Password string `mapstructure:"password"` // Database password
-	Name     string `mapstructure:"name"`     // Database name
-	SSLMode  string `mapstructure:"ssl_mode"` // SSL mode (default: "disable")
+	Host     string `env:"HOST" envDefault:"localhost"`    // Database host address
+	Port     int    `env:"PORT" envDefault:"5432"`         // Database port (default: 5432)
+	User     string `env:"USER" envDefault:"postgres"`     // Database username
+	Password string `env:"PASSWORD" envDefault:"postgres"` // Database password
+	Name     string `env:"NAME" envDefault:"aras_auth"`    // Database name
+	SSLMode  string `env:"SSL_MODE" envDefault:"disable"`  // SSL mode (default: "disable")
 }
 
 // JWTConfig manages JWT token settings with strong typing using time.Duration instead
 // of strings or integers. This provides compile-time type safety and eliminates
 // runtime parsing errors for time-based configurations.
 type JWTConfig struct {
-	SecretKey     string        `mapstructure:"secret_key"`     // JWT signing secret
-	AccessExpiry  time.Duration `mapstructure:"access_expiry"`  // Access token lifetime (default: "15m")
-	RefreshExpiry time.Duration `mapstructure:"refresh_expiry"` // Refresh token lifetime (default: "7d")
+	SecretKey     string        `env:"SECRET_KEY" envDefault:"change-me-please-32b-min"` // JWT signing secret
+	AccessExpiry  time.Duration `env:"ACCESS_EXPIRY" envDefault:"15m"`                   // Access token lifetime (default: "15m")
+	RefreshExpiry time.Duration `env:"REFRESH_EXPIRY" envDefault:"168h"`                 // Refresh token lifetime (default: "168h")
 }
 
 // SMTPConfig defines email service configuration for notification and password reset
-// functionality. Uses mapstructure tags for consistent configuration mapping patterns.
+// functionality. Uses env tags for consistent configuration mapping patterns.
 type SMTPConfig struct {
-	Host     string `mapstructure:"host"`     // SMTP server hostname
-	Port     int    `mapstructure:"port"`     // SMTP server port
-	Username string `mapstructure:"username"` // SMTP authentication username
-	Password string `mapstructure:"password"` // SMTP authentication password
-	From     string `mapstructure:"from"`     // Default sender email address
+	Host     string `env:"HOST" envDefault:"localhost"`                 // SMTP server hostname
+	Port     int    `env:"PORT" envDefault:"587"`                       // SMTP server port
+	Username string `env:"USERNAME" envDefault:""`                      // SMTP authentication username
+	Password string `env:"PASSWORD" envDefault:""`                      // SMTP authentication password
+	From     string `env:"FROM" envDefault:"noreply@aras-services.com"` // Default sender email address
 }
 
 // AdminConfig stores default administrator credentials for initial system setup.
 // This follows the convention over configuration principle by providing sensible defaults.
 type AdminConfig struct {
-	Email    string `mapstructure:"email"`    // Default admin email address
-	Password string `mapstructure:"password"` // Default admin password
+	Email    string `env:"EMAIL" envDefault:"admin@aras-services.com"` // Default admin email address
+	Password string `env:"PASSWORD" envDefault:"admin123"`             // Default admin password
 }
 
-// Load implements the Configuration Management Pattern with support for multiple configuration sources.
-// It follows the 12-Factor App methodology by enabling environment variable overrides and
-// providing sensible defaults. The function demonstrates graceful degradation by allowing
-// missing configuration files while still failing on actual read errors.
+// Load implements the Configuration Management Pattern with support for environment variables only.
+// It follows the 12-Factor App methodology by reading all configuration from environment variables
+// with sensible defaults. This approach provides maximum flexibility across different deployment
+// environments while maintaining type safety and proper error handling.
 //
 // Configuration precedence (highest to lowest):
-// 1. Environment variables (via AutomaticEnv)
-// 2. Configuration file (config.yaml)
-// 3. Default values (fail-safe defaults)
+// 1. Environment variables
+// 2. Default values (fail-safe defaults)
 //
 // This approach provides flexibility across different deployment environments while
 // maintaining type safety and proper error handling.
 func Load() (*Config, error) {
-	// Configure Viper to look for YAML configuration files
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./config") // Look in config directory first
-	viper.AddConfigPath(".")        // Fallback to current directory
-
-	// Apply Default Values Pattern: Set fail-safe defaults for optional configuration
-	// This follows the "convention over configuration" principle, reducing the burden
-	// of configuration while ensuring the application can start with minimal setup.
-	viper.SetDefault("server.host", "0.0.0.0")       // Bind to all interfaces by default
-	viper.SetDefault("server.port", 7600)            // Standard HTTP port
-	viper.SetDefault("database.host", "localhost")   // Local development default
-	viper.SetDefault("database.port", 5432)          // PostgreSQL standard port
-	viper.SetDefault("database.ssl_mode", "disable") // Disable SSL for local development
-	viper.SetDefault("jwt.access_expiry", "15m")     // Short-lived access tokens for security
-	viper.SetDefault("jwt.refresh_expiry", "7d")     // Longer-lived refresh tokens
-
-	// Enable 12-Factor App compliance: Environment variables override file configuration
-	// This allows deployment-specific configuration without modifying code or files
-	viper.AutomaticEnv()
-
-	// Implement Graceful Degradation: Allow missing config file, fail only on read errors
-	// This enables environment-variable-only configurations for containerized deployments
-	if err := viper.ReadInConfig(); err != nil {
-		// Only fail if there's an actual read error, not if the file is missing
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return nil, fmt.Errorf("error reading config file: %w", err)
-		}
-	}
-
-	// Unmarshal configuration into strongly-typed struct using mapstructure tags
-	// This provides compile-time type safety and eliminates runtime parsing errors
 	var config Config
-	if err := viper.Unmarshal(&config); err != nil {
-		return nil, fmt.Errorf("error unmarshaling config: %w", err)
+
+	// Parse environment variables into the config struct
+	// This provides compile-time type safety and eliminates runtime parsing errors
+	if err := env.Parse(&config); err != nil {
+		return nil, fmt.Errorf("error parsing environment variables: %w", err)
 	}
 
 	return &config, nil
