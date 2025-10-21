@@ -15,8 +15,10 @@ class User:
     last_name: str
     status: str
     email_verified: bool
-    created_at: str
-    updated_at: str
+    deleted_at: Optional[str] = None
+    deleted_by: Optional[str] = None
+    created_at: str = ''
+    updated_at: str = ''
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'User':
@@ -28,6 +30,8 @@ class User:
             last_name=data.get('last_name', ''),
             status=data.get('status', ''),
             email_verified=data.get('email_verified', False),
+            deleted_at=data.get('deleted_at'),
+            deleted_by=data.get('deleted_by'),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')
         )
@@ -39,8 +43,11 @@ class Group:
     id: str
     name: str
     description: str
-    created_at: str
-    updated_at: str
+    is_active: bool = True
+    deleted_at: Optional[str] = None
+    deleted_by: Optional[str] = None
+    created_at: str = ''
+    updated_at: str = ''
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Group':
@@ -49,6 +56,9 @@ class Group:
             id=data.get('id', ''),
             name=data.get('name', ''),
             description=data.get('description', ''),
+            is_active=data.get('is_active', True),
+            deleted_at=data.get('deleted_at'),
+            deleted_by=data.get('deleted_by'),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')
         )
@@ -60,8 +70,11 @@ class Role:
     id: str
     name: str
     description: str
-    created_at: str
-    updated_at: str
+    is_active: bool = True
+    deleted_at: Optional[str] = None
+    deleted_by: Optional[str] = None
+    created_at: str = ''
+    updated_at: str = ''
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Role':
@@ -70,6 +83,9 @@ class Role:
             id=data.get('id', ''),
             name=data.get('name', ''),
             description=data.get('description', ''),
+            is_active=data.get('is_active', True),
+            deleted_at=data.get('deleted_at'),
+            deleted_by=data.get('deleted_by'),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')
         )
@@ -82,8 +98,11 @@ class Permission:
     resource: str
     action: str
     description: str
-    created_at: str
-    updated_at: str
+    is_active: bool = True
+    deleted_at: Optional[str] = None
+    deleted_by: Optional[str] = None
+    created_at: str = ''
+    updated_at: str = ''
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Permission':
@@ -93,6 +112,9 @@ class Permission:
             resource=data.get('resource', ''),
             action=data.get('action', ''),
             description=data.get('description', ''),
+            is_active=data.get('is_active', True),
+            deleted_at=data.get('deleted_at'),
+            deleted_by=data.get('deleted_by'),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')
         )

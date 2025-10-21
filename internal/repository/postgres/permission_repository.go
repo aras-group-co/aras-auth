@@ -31,13 +31,13 @@ func (r *PermissionRepository) Create(permission *domain.Permission) error {
 
 func (r *PermissionRepository) GetByID(id uuid.UUID) (*domain.Permission, error) {
 	query := `
-		SELECT id, resource, action, description, created_at, updated_at
-		FROM permissions WHERE id = $1
+		SELECT id, resource, action, description, is_active, deleted_at, deleted_by, created_at, updated_at
+		FROM permissions WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	var permission domain.Permission
 	err := r.db.QueryRow(context.Background(), query, id).Scan(
-		&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.CreatedAt, &permission.UpdatedAt,
+		&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.IsActive, &permission.DeletedAt, &permission.DeletedBy, &permission.CreatedAt, &permission.UpdatedAt,
 	)
 
 	if err != nil {
@@ -91,7 +91,11 @@ func (r *PermissionRepository) Update(permission *domain.Permission) error {
 }
 
 func (r *PermissionRepository) Delete(id uuid.UUID) error {
-	query := `DELETE FROM permissions WHERE id = $1`
+	query := `
+		UPDATE permissions 
+		SET deleted_at = NOW(), updated_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
+	`
 
 	result, err := r.db.Exec(context.Background(), query, id)
 	if err != nil {
@@ -99,7 +103,7 @@ func (r *PermissionRepository) Delete(id uuid.UUID) error {
 	}
 
 	if result.RowsAffected() == 0 {
-		return fmt.Errorf("permission not found")
+		return fmt.Errorf("permission not found or already deleted")
 	}
 
 	return nil
@@ -107,8 +111,9 @@ func (r *PermissionRepository) Delete(id uuid.UUID) error {
 
 func (r *PermissionRepository) List(limit, offset int) ([]*domain.Permission, error) {
 	query := `
-		SELECT id, resource, action, description, created_at, updated_at
+		SELECT id, resource, action, description, is_active, deleted_at, deleted_by, created_at, updated_at
 		FROM permissions 
+		WHERE deleted_at IS NULL
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2
 	`
@@ -123,7 +128,7 @@ func (r *PermissionRepository) List(limit, offset int) ([]*domain.Permission, er
 	for rows.Next() {
 		var permission domain.Permission
 		err := rows.Scan(
-			&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.CreatedAt, &permission.UpdatedAt,
+			&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.IsActive, &permission.DeletedAt, &permission.DeletedBy, &permission.CreatedAt, &permission.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -135,7 +140,7 @@ func (r *PermissionRepository) List(limit, offset int) ([]*domain.Permission, er
 }
 
 func (r *PermissionRepository) Count() (int, error) {
-	query := `SELECT COUNT(*) FROM permissions`
+	query := `SELECT COUNT(*) FROM permissions WHERE deleted_at IS NULL`
 
 	var count int
 	err := r.db.QueryRow(context.Background(), query).Scan(&count)
@@ -235,5 +240,3 @@ func (r *PermissionRepository) CheckUserPermission(userID uuid.UUID, resource, a
 
 	return false, nil
 }
-
-

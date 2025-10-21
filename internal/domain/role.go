@@ -7,11 +7,14 @@ import (
 )
 
 type Role struct {
-	ID          uuid.UUID `json:"id" db:"id"`
-	Name        string    `json:"name" db:"name" validate:"required,min=1,max=100"`
-	Description string    `json:"description" db:"description"`
-	CreatedAt   time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+	ID          uuid.UUID  `json:"id" db:"id"`
+	Name        string     `json:"name" db:"name" validate:"required,min=1,max=100"`
+	Description string     `json:"description" db:"description"`
+	IsActive    bool       `json:"is_active" db:"is_active"`
+	DeletedAt   *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
+	DeletedBy   *uuid.UUID `json:"deleted_by,omitempty" db:"deleted_by"`
+	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 }
 
 type CreateRoleRequest struct {
@@ -43,4 +46,3 @@ type RoleRepository interface {
 	GetUserRoles(userID uuid.UUID) ([]*Role, error)
 	GetGroupRoles(groupID uuid.UUID) ([]*Role, error)
 }
-

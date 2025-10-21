@@ -33,14 +33,14 @@ func (r *UserRepository) Create(user *domain.User) error {
 
 func (r *UserRepository) GetByID(id uuid.UUID) (*domain.User, error) {
 	query := `
-		SELECT id, email, password_hash, first_name, last_name, status, email_verified, created_at, updated_at
-		FROM users WHERE id = $1
+		SELECT id, email, password_hash, first_name, last_name, status, email_verified, deleted_at, deleted_by, created_at, updated_at
+		FROM users WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	var user domain.User
 	err := r.db.QueryRow(context.Background(), query, id).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
-		&user.Status, &user.EmailVerified, &user.CreatedAt, &user.UpdatedAt,
+		&user.Status, &user.EmailVerified, &user.DeletedAt, &user.DeletedBy, &user.CreatedAt, &user.UpdatedAt,
 	)
 
 	if err != nil {
@@ -55,14 +55,14 @@ func (r *UserRepository) GetByID(id uuid.UUID) (*domain.User, error) {
 
 func (r *UserRepository) GetByEmail(email string) (*domain.User, error) {
 	query := `
-		SELECT id, email, password_hash, first_name, last_name, status, email_verified, created_at, updated_at
-		FROM users WHERE email = $1
+		SELECT id, email, password_hash, first_name, last_name, status, email_verified, deleted_at, deleted_by, created_at, updated_at
+		FROM users WHERE email = $1 AND deleted_at IS NULL
 	`
 
 	var user domain.User
 	err := r.db.QueryRow(context.Background(), query, email).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
-		&user.Status, &user.EmailVerified, &user.CreatedAt, &user.UpdatedAt,
+		&user.Status, &user.EmailVerified, &user.DeletedAt, &user.DeletedBy, &user.CreatedAt, &user.UpdatedAt,
 	)
 
 	if err != nil {
@@ -97,7 +97,11 @@ func (r *UserRepository) Update(user *domain.User) error {
 }
 
 func (r *UserRepository) Delete(id uuid.UUID) error {
-	query := `DELETE FROM users WHERE id = $1`
+	query := `
+		UPDATE users 
+		SET deleted_at = NOW(), updated_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
+	`
 
 	result, err := r.db.Exec(context.Background(), query, id)
 	if err != nil {
@@ -105,7 +109,7 @@ func (r *UserRepository) Delete(id uuid.UUID) error {
 	}
 
 	if result.RowsAffected() == 0 {
-		return fmt.Errorf("user not found")
+		return fmt.Errorf("user not found or already deleted")
 	}
 
 	return nil
@@ -113,8 +117,9 @@ func (r *UserRepository) Delete(id uuid.UUID) error {
 
 func (r *UserRepository) List(limit, offset int) ([]*domain.User, error) {
 	query := `
-		SELECT id, email, password_hash, first_name, last_name, status, email_verified, created_at, updated_at
+		SELECT id, email, password_hash, first_name, last_name, status, email_verified, deleted_at, deleted_by, created_at, updated_at
 		FROM users 
+		WHERE deleted_at IS NULL
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2
 	`
@@ -130,7 +135,7 @@ func (r *UserRepository) List(limit, offset int) ([]*domain.User, error) {
 		var user domain.User
 		err := rows.Scan(
 			&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
-			&user.Status, &user.EmailVerified, &user.CreatedAt, &user.UpdatedAt,
+			&user.Status, &user.EmailVerified, &user.DeletedAt, &user.DeletedBy, &user.CreatedAt, &user.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -142,7 +147,7 @@ func (r *UserRepository) List(limit, offset int) ([]*domain.User, error) {
 }
 
 func (r *UserRepository) Count() (int, error) {
-	query := `SELECT COUNT(*) FROM users`
+	query := `SELECT COUNT(*) FROM users WHERE deleted_at IS NULL`
 
 	var count int
 	err := r.db.QueryRow(context.Background(), query).Scan(&count)
@@ -178,5 +183,3 @@ func (r *UserRepository) UpdateEmailVerified(id uuid.UUID, verified bool) error 
 
 	return nil
 }
-
-

@@ -7,12 +7,15 @@ import (
 )
 
 type Permission struct {
-	ID          uuid.UUID `json:"id" db:"id"`
-	Resource    string    `json:"resource" db:"resource" validate:"required,min=1,max=100"`
-	Action      string    `json:"action" db:"action" validate:"required,min=1,max=100"`
-	Description string    `json:"description" db:"description"`
-	CreatedAt   time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+	ID          uuid.UUID  `json:"id" db:"id"`
+	Resource    string     `json:"resource" db:"resource" validate:"required,min=1,max=100"`
+	Action      string     `json:"action" db:"action" validate:"required,min=1,max=100"`
+	Description string     `json:"description" db:"description"`
+	IsActive    bool       `json:"is_active" db:"is_active"`
+	DeletedAt   *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
+	DeletedBy   *uuid.UUID `json:"deleted_by,omitempty" db:"deleted_by"`
+	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 }
 
 type CreatePermissionRequest struct {
@@ -50,4 +53,3 @@ type PermissionRepository interface {
 	GetRolePermissions(roleID uuid.UUID) ([]*Permission, error)
 	CheckUserPermission(userID uuid.UUID, resource, action string) (bool, error)
 }
-

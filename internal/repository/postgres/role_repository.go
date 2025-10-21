@@ -31,13 +31,13 @@ func (r *RoleRepository) Create(role *domain.Role) error {
 
 func (r *RoleRepository) GetByID(id uuid.UUID) (*domain.Role, error) {
 	query := `
-		SELECT id, name, description, created_at, updated_at
-		FROM roles WHERE id = $1
+		SELECT id, name, description, is_active, deleted_at, deleted_by, created_at, updated_at
+		FROM roles WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	var role domain.Role
 	err := r.db.QueryRow(context.Background(), query, id).Scan(
-		&role.ID, &role.Name, &role.Description, &role.CreatedAt, &role.UpdatedAt,
+		&role.ID, &role.Name, &role.Description, &role.IsActive, &role.DeletedAt, &role.DeletedBy, &role.CreatedAt, &role.UpdatedAt,
 	)
 
 	if err != nil {
@@ -91,7 +91,11 @@ func (r *RoleRepository) Update(role *domain.Role) error {
 }
 
 func (r *RoleRepository) Delete(id uuid.UUID) error {
-	query := `DELETE FROM roles WHERE id = $1`
+	query := `
+		UPDATE roles 
+		SET deleted_at = NOW(), updated_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
+	`
 
 	result, err := r.db.Exec(context.Background(), query, id)
 	if err != nil {
@@ -99,7 +103,7 @@ func (r *RoleRepository) Delete(id uuid.UUID) error {
 	}
 
 	if result.RowsAffected() == 0 {
-		return fmt.Errorf("role not found")
+		return fmt.Errorf("role not found or already deleted")
 	}
 
 	return nil
@@ -107,8 +111,9 @@ func (r *RoleRepository) Delete(id uuid.UUID) error {
 
 func (r *RoleRepository) List(limit, offset int) ([]*domain.Role, error) {
 	query := `
-		SELECT id, name, description, created_at, updated_at
+		SELECT id, name, description, is_active, deleted_at, deleted_by, created_at, updated_at
 		FROM roles 
+		WHERE deleted_at IS NULL
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2
 	`
@@ -123,7 +128,7 @@ func (r *RoleRepository) List(limit, offset int) ([]*domain.Role, error) {
 	for rows.Next() {
 		var role domain.Role
 		err := rows.Scan(
-			&role.ID, &role.Name, &role.Description, &role.CreatedAt, &role.UpdatedAt,
+			&role.ID, &role.Name, &role.Description, &role.IsActive, &role.DeletedAt, &role.DeletedBy, &role.CreatedAt, &role.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -135,7 +140,7 @@ func (r *RoleRepository) List(limit, offset int) ([]*domain.Role, error) {
 }
 
 func (r *RoleRepository) Count() (int, error) {
-	query := `SELECT COUNT(*) FROM roles`
+	query := `SELECT COUNT(*) FROM roles WHERE deleted_at IS NULL`
 
 	var count int
 	err := r.db.QueryRow(context.Background(), query).Scan(&count)
@@ -253,5 +258,3 @@ func (r *RoleRepository) GetGroupRoles(groupID uuid.UUID) ([]*domain.Role, error
 
 	return roles, nil
 }
-
-

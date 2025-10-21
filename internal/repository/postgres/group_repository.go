@@ -31,13 +31,13 @@ func (r *GroupRepository) Create(group *domain.Group) error {
 
 func (r *GroupRepository) GetByID(id uuid.UUID) (*domain.Group, error) {
 	query := `
-		SELECT id, name, description, created_at, updated_at
-		FROM groups WHERE id = $1
+		SELECT id, name, description, is_active, deleted_at, deleted_by, created_at, updated_at
+		FROM groups WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	var group domain.Group
 	err := r.db.QueryRow(context.Background(), query, id).Scan(
-		&group.ID, &group.Name, &group.Description, &group.CreatedAt, &group.UpdatedAt,
+		&group.ID, &group.Name, &group.Description, &group.IsActive, &group.DeletedAt, &group.DeletedBy, &group.CreatedAt, &group.UpdatedAt,
 	)
 
 	if err != nil {
@@ -70,7 +70,11 @@ func (r *GroupRepository) Update(group *domain.Group) error {
 }
 
 func (r *GroupRepository) Delete(id uuid.UUID) error {
-	query := `DELETE FROM groups WHERE id = $1`
+	query := `
+		UPDATE groups 
+		SET deleted_at = NOW(), updated_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
+	`
 
 	result, err := r.db.Exec(context.Background(), query, id)
 	if err != nil {
@@ -78,7 +82,7 @@ func (r *GroupRepository) Delete(id uuid.UUID) error {
 	}
 
 	if result.RowsAffected() == 0 {
-		return fmt.Errorf("group not found")
+		return fmt.Errorf("group not found or already deleted")
 	}
 
 	return nil
@@ -86,8 +90,9 @@ func (r *GroupRepository) Delete(id uuid.UUID) error {
 
 func (r *GroupRepository) List(limit, offset int) ([]*domain.Group, error) {
 	query := `
-		SELECT id, name, description, created_at, updated_at
+		SELECT id, name, description, is_active, deleted_at, deleted_by, created_at, updated_at
 		FROM groups 
+		WHERE deleted_at IS NULL
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2
 	`
@@ -102,7 +107,7 @@ func (r *GroupRepository) List(limit, offset int) ([]*domain.Group, error) {
 	for rows.Next() {
 		var group domain.Group
 		err := rows.Scan(
-			&group.ID, &group.Name, &group.Description, &group.CreatedAt, &group.UpdatedAt,
+			&group.ID, &group.Name, &group.Description, &group.IsActive, &group.DeletedAt, &group.DeletedBy, &group.CreatedAt, &group.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -114,7 +119,7 @@ func (r *GroupRepository) List(limit, offset int) ([]*domain.Group, error) {
 }
 
 func (r *GroupRepository) Count() (int, error) {
-	query := `SELECT COUNT(*) FROM groups`
+	query := `SELECT COUNT(*) FROM groups WHERE deleted_at IS NULL`
 
 	var count int
 	err := r.db.QueryRow(context.Background(), query).Scan(&count)
@@ -207,5 +212,3 @@ func (r *GroupRepository) GetUserGroups(userID uuid.UUID) ([]*domain.Group, erro
 
 	return groups, nil
 }
-
-

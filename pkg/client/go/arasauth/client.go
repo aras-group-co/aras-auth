@@ -43,42 +43,53 @@ type AuthResponse struct {
 
 // User represents a user in the system
 type User struct {
-	ID            string `json:"id"`
-	Email         string `json:"email"`
-	FirstName     string `json:"first_name"`
-	LastName      string `json:"last_name"`
-	Status        string `json:"status"`
-	EmailVerified bool   `json:"email_verified"`
-	CreatedAt     string `json:"created_at"`
-	UpdatedAt     string `json:"updated_at"`
+	ID            string  `json:"id"`
+	Email         string  `json:"email"`
+	FirstName     string  `json:"first_name"`
+	LastName      string  `json:"last_name"`
+	Status        string  `json:"status"`
+	EmailVerified bool    `json:"email_verified"`
+	DeletedAt     *string `json:"deleted_at,omitempty"`
+	DeletedBy     *string `json:"deleted_by,omitempty"`
+	CreatedAt     string  `json:"created_at"`
+	UpdatedAt     string  `json:"updated_at"`
 }
 
 // Group represents a group in the system
 type Group struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	IsActive    bool    `json:"is_active"`
+	DeletedAt   *string `json:"deleted_at,omitempty"`
+	DeletedBy   *string `json:"deleted_by,omitempty"`
+	CreatedAt   string  `json:"created_at"`
+	UpdatedAt   string  `json:"updated_at"`
 }
 
 // Role represents a role in the system
 type Role struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	IsActive    bool    `json:"is_active"`
+	DeletedAt   *string `json:"deleted_at,omitempty"`
+	DeletedBy   *string `json:"deleted_by,omitempty"`
+	CreatedAt   string  `json:"created_at"`
+	UpdatedAt   string  `json:"updated_at"`
 }
 
 // Permission represents a permission in the system
 type Permission struct {
-	ID          string `json:"id"`
-	Resource    string `json:"resource"`
-	Action      string `json:"action"`
-	Description string `json:"description"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
+	ID          string  `json:"id"`
+	Resource    string  `json:"resource"`
+	Action      string  `json:"action"`
+	Description string  `json:"description"`
+	IsActive    bool    `json:"is_active"`
+	DeletedAt   *string `json:"deleted_at,omitempty"`
+	DeletedBy   *string `json:"deleted_by,omitempty"`
+	CreatedAt   string  `json:"created_at"`
+	UpdatedAt   string  `json:"updated_at"`
 }
 
 // APIResponse represents the standard API response
