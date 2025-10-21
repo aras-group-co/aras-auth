@@ -31,13 +31,13 @@ func (r *RoleRepository) Create(role *domain.Role) error {
 
 func (r *RoleRepository) GetByID(id uuid.UUID) (*domain.Role, error) {
 	query := `
-		SELECT id, name, description, is_active, deleted_at, deleted_by, created_at, updated_at
-		FROM roles WHERE id = $1 AND deleted_at IS NULL
+		SELECT id, name, description, is_active, is_deleted, created_at, updated_at
+		FROM roles WHERE id = $1 AND is_deleted = FALSE
 	`
 
 	var role domain.Role
 	err := r.db.QueryRow(context.Background(), query, id).Scan(
-		&role.ID, &role.Name, &role.Description, &role.IsActive, &role.DeletedAt, &role.DeletedBy, &role.CreatedAt, &role.UpdatedAt,
+		&role.ID, &role.Name, &role.Description, &role.IsActive, &role.IsDeleted, &role.CreatedAt, &role.UpdatedAt,
 	)
 
 	if err != nil {
@@ -52,13 +52,13 @@ func (r *RoleRepository) GetByID(id uuid.UUID) (*domain.Role, error) {
 
 func (r *RoleRepository) GetByName(name string) (*domain.Role, error) {
 	query := `
-		SELECT id, name, description, created_at, updated_at
-		FROM roles WHERE name = $1
+		SELECT id, name, description, is_active, is_deleted, created_at, updated_at
+		FROM roles WHERE name = $1 AND is_deleted = FALSE
 	`
 
 	var role domain.Role
 	err := r.db.QueryRow(context.Background(), query, name).Scan(
-		&role.ID, &role.Name, &role.Description, &role.CreatedAt, &role.UpdatedAt,
+		&role.ID, &role.Name, &role.Description, &role.IsActive, &role.IsDeleted, &role.CreatedAt, &role.UpdatedAt,
 	)
 
 	if err != nil {
@@ -93,8 +93,8 @@ func (r *RoleRepository) Update(role *domain.Role) error {
 func (r *RoleRepository) Delete(id uuid.UUID) error {
 	query := `
 		UPDATE roles 
-		SET deleted_at = NOW(), updated_at = NOW()
-		WHERE id = $1 AND deleted_at IS NULL
+		SET is_deleted = TRUE, updated_at = NOW()
+		WHERE id = $1 AND is_deleted = FALSE
 	`
 
 	result, err := r.db.Exec(context.Background(), query, id)
@@ -111,9 +111,9 @@ func (r *RoleRepository) Delete(id uuid.UUID) error {
 
 func (r *RoleRepository) List(limit, offset int) ([]*domain.Role, error) {
 	query := `
-		SELECT id, name, description, is_active, deleted_at, deleted_by, created_at, updated_at
+		SELECT id, name, description, is_active, is_deleted, created_at, updated_at
 		FROM roles 
-		WHERE deleted_at IS NULL
+		WHERE is_deleted = FALSE
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2
 	`
@@ -128,7 +128,7 @@ func (r *RoleRepository) List(limit, offset int) ([]*domain.Role, error) {
 	for rows.Next() {
 		var role domain.Role
 		err := rows.Scan(
-			&role.ID, &role.Name, &role.Description, &role.IsActive, &role.DeletedAt, &role.DeletedBy, &role.CreatedAt, &role.UpdatedAt,
+			&role.ID, &role.Name, &role.Description, &role.IsActive, &role.IsDeleted, &role.CreatedAt, &role.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -140,7 +140,7 @@ func (r *RoleRepository) List(limit, offset int) ([]*domain.Role, error) {
 }
 
 func (r *RoleRepository) Count() (int, error) {
-	query := `SELECT COUNT(*) FROM roles WHERE deleted_at IS NULL`
+	query := `SELECT COUNT(*) FROM roles WHERE is_deleted = FALSE`
 
 	var count int
 	err := r.db.QueryRow(context.Background(), query).Scan(&count)

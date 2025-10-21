@@ -15,8 +15,7 @@ class User:
     last_name: str
     status: str
     email_verified: bool
-    deleted_at: Optional[str] = None
-    deleted_by: Optional[str] = None
+    is_deleted: bool = False
     created_at: str = ''
     updated_at: str = ''
 
@@ -30,8 +29,7 @@ class User:
             last_name=data.get('last_name', ''),
             status=data.get('status', ''),
             email_verified=data.get('email_verified', False),
-            deleted_at=data.get('deleted_at'),
-            deleted_by=data.get('deleted_by'),
+            is_deleted=data.get('is_deleted', False),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')
         )
@@ -44,8 +42,7 @@ class Group:
     name: str
     description: str
     is_active: bool = True
-    deleted_at: Optional[str] = None
-    deleted_by: Optional[str] = None
+    is_deleted: bool = False
     created_at: str = ''
     updated_at: str = ''
 
@@ -57,8 +54,7 @@ class Group:
             name=data.get('name', ''),
             description=data.get('description', ''),
             is_active=data.get('is_active', True),
-            deleted_at=data.get('deleted_at'),
-            deleted_by=data.get('deleted_by'),
+            is_deleted=data.get('is_deleted', False),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')
         )
@@ -71,8 +67,7 @@ class Role:
     name: str
     description: str
     is_active: bool = True
-    deleted_at: Optional[str] = None
-    deleted_by: Optional[str] = None
+    is_deleted: bool = False
     created_at: str = ''
     updated_at: str = ''
 
@@ -84,8 +79,7 @@ class Role:
             name=data.get('name', ''),
             description=data.get('description', ''),
             is_active=data.get('is_active', True),
-            deleted_at=data.get('deleted_at'),
-            deleted_by=data.get('deleted_by'),
+            is_deleted=data.get('is_deleted', False),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')
         )
@@ -99,8 +93,7 @@ class Permission:
     action: str
     description: str
     is_active: bool = True
-    deleted_at: Optional[str] = None
-    deleted_by: Optional[str] = None
+    is_deleted: bool = False
     created_at: str = ''
     updated_at: str = ''
 
@@ -113,8 +106,7 @@ class Permission:
             action=data.get('action', ''),
             description=data.get('description', ''),
             is_active=data.get('is_active', True),
-            deleted_at=data.get('deleted_at'),
-            deleted_by=data.get('deleted_by'),
+            is_deleted=data.get('is_deleted', False),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')
         )

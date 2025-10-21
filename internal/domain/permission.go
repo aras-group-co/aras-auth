@@ -12,8 +12,7 @@ type Permission struct {
 	Action      string     `json:"action" db:"action" validate:"required,min=1,max=100"`
 	Description string     `json:"description" db:"description"`
 	IsActive    bool       `json:"is_active" db:"is_active"`
-	DeletedAt   *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
-	DeletedBy   *uuid.UUID `json:"deleted_by,omitempty" db:"deleted_by"`
+	IsDeleted   bool       `json:"is_deleted" db:"is_deleted"`
 	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 }
