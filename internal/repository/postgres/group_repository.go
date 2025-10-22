@@ -31,13 +31,13 @@ func (r *GroupRepository) Create(group *domain.Group) error {
 
 func (r *GroupRepository) GetByID(id uuid.UUID) (*domain.Group, error) {
 	query := `
-		SELECT id, name, description, is_active, is_deleted, created_at, updated_at
+		SELECT id, name, description, is_active, is_deleted, is_system, created_at, updated_at
 		FROM groups WHERE id = $1 AND is_deleted = FALSE
 	`
 
 	var group domain.Group
 	err := r.db.QueryRow(context.Background(), query, id).Scan(
-		&group.ID, &group.Name, &group.Description, &group.IsActive, &group.IsDeleted, &group.CreatedAt, &group.UpdatedAt,
+		&group.ID, &group.Name, &group.Description, &group.IsActive, &group.IsDeleted, &group.IsSystem, &group.CreatedAt, &group.UpdatedAt,
 	)
 
 	if err != nil {
@@ -90,7 +90,7 @@ func (r *GroupRepository) Delete(id uuid.UUID) error {
 
 func (r *GroupRepository) List(limit, offset int) ([]*domain.Group, error) {
 	query := `
-		SELECT id, name, description, is_active, is_deleted, created_at, updated_at
+		SELECT id, name, description, is_active, is_deleted, is_system, created_at, updated_at
 		FROM groups 
 		WHERE is_deleted = FALSE
 		ORDER BY created_at DESC
@@ -107,7 +107,7 @@ func (r *GroupRepository) List(limit, offset int) ([]*domain.Group, error) {
 	for rows.Next() {
 		var group domain.Group
 		err := rows.Scan(
-			&group.ID, &group.Name, &group.Description, &group.IsActive, &group.IsDeleted, &group.CreatedAt, &group.UpdatedAt,
+			&group.ID, &group.Name, &group.Description, &group.IsActive, &group.IsDeleted, &group.IsSystem, &group.CreatedAt, &group.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err

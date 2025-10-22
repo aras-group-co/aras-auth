@@ -31,13 +31,13 @@ func (r *PermissionRepository) Create(permission *domain.Permission) error {
 
 func (r *PermissionRepository) GetByID(id uuid.UUID) (*domain.Permission, error) {
 	query := `
-		SELECT id, resource, action, description, is_active, is_deleted, created_at, updated_at
+		SELECT id, resource, action, description, is_active, is_deleted, is_system, created_at, updated_at
 		FROM permissions WHERE id = $1 AND is_deleted = FALSE
 	`
 
 	var permission domain.Permission
 	err := r.db.QueryRow(context.Background(), query, id).Scan(
-		&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.IsActive, &permission.IsDeleted, &permission.CreatedAt, &permission.UpdatedAt,
+		&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.IsActive, &permission.IsDeleted, &permission.IsSystem, &permission.CreatedAt, &permission.UpdatedAt,
 	)
 
 	if err != nil {
@@ -52,13 +52,13 @@ func (r *PermissionRepository) GetByID(id uuid.UUID) (*domain.Permission, error)
 
 func (r *PermissionRepository) GetByResourceAndAction(resource, action string) (*domain.Permission, error) {
 	query := `
-		SELECT id, resource, action, description, is_active, is_deleted, created_at, updated_at
+		SELECT id, resource, action, description, is_active, is_deleted, is_system, created_at, updated_at
 		FROM permissions WHERE resource = $1 AND action = $2 AND is_deleted = FALSE
 	`
 
 	var permission domain.Permission
 	err := r.db.QueryRow(context.Background(), query, resource, action).Scan(
-		&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.IsActive, &permission.IsDeleted, &permission.CreatedAt, &permission.UpdatedAt,
+		&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.IsActive, &permission.IsDeleted, &permission.IsSystem, &permission.CreatedAt, &permission.UpdatedAt,
 	)
 
 	if err != nil {
@@ -111,7 +111,7 @@ func (r *PermissionRepository) Delete(id uuid.UUID) error {
 
 func (r *PermissionRepository) List(limit, offset int) ([]*domain.Permission, error) {
 	query := `
-		SELECT id, resource, action, description, is_active, is_deleted, created_at, updated_at
+		SELECT id, resource, action, description, is_active, is_deleted, is_system, created_at, updated_at
 		FROM permissions 
 		WHERE is_deleted = FALSE
 		ORDER BY created_at DESC
@@ -128,7 +128,7 @@ func (r *PermissionRepository) List(limit, offset int) ([]*domain.Permission, er
 	for rows.Next() {
 		var permission domain.Permission
 		err := rows.Scan(
-			&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.IsActive, &permission.IsDeleted, &permission.CreatedAt, &permission.UpdatedAt,
+			&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.IsActive, &permission.IsDeleted, &permission.IsSystem, &permission.CreatedAt, &permission.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err

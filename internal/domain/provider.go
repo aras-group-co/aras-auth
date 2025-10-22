@@ -2,10 +2,23 @@ package domain
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+// Provider represents an identity provider configuration
+type Provider struct {
+	ID        uuid.UUID       `json:"id" db:"id"`
+	Name      string          `json:"name" db:"name"`
+	Type      string          `json:"type" db:"type"`
+	Config    json.RawMessage `json:"config" db:"config"`
+	Enabled   bool            `json:"enabled" db:"enabled"`
+	IsSystem  bool            `json:"is_system" db:"is_system"`
+	CreatedAt time.Time       `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at" db:"updated_at"`
+}
 
 // IdentityProvider defines the interface for identity providers
 // This allows for pluggable authentication backends

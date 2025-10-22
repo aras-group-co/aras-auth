@@ -33,14 +33,14 @@ func (r *UserRepository) Create(user *domain.User) error {
 
 func (r *UserRepository) GetByID(id uuid.UUID) (*domain.User, error) {
 	query := `
-		SELECT id, email, password_hash, first_name, last_name, status, email_verified, is_deleted, created_at, updated_at
+		SELECT id, email, password_hash, first_name, last_name, status, email_verified, is_deleted, is_system, created_at, updated_at
 		FROM users WHERE id = $1 AND is_deleted = FALSE
 	`
 
 	var user domain.User
 	err := r.db.QueryRow(context.Background(), query, id).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
-		&user.Status, &user.EmailVerified, &user.IsDeleted, &user.CreatedAt, &user.UpdatedAt,
+		&user.Status, &user.EmailVerified, &user.IsDeleted, &user.IsSystem, &user.CreatedAt, &user.UpdatedAt,
 	)
 
 	if err != nil {
@@ -55,14 +55,14 @@ func (r *UserRepository) GetByID(id uuid.UUID) (*domain.User, error) {
 
 func (r *UserRepository) GetByEmail(email string) (*domain.User, error) {
 	query := `
-		SELECT id, email, password_hash, first_name, last_name, status, email_verified, is_deleted, created_at, updated_at
+		SELECT id, email, password_hash, first_name, last_name, status, email_verified, is_deleted, is_system, created_at, updated_at
 		FROM users WHERE email = $1 AND is_deleted = FALSE
 	`
 
 	var user domain.User
 	err := r.db.QueryRow(context.Background(), query, email).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
-		&user.Status, &user.EmailVerified, &user.IsDeleted, &user.CreatedAt, &user.UpdatedAt,
+		&user.Status, &user.EmailVerified, &user.IsDeleted, &user.IsSystem, &user.CreatedAt, &user.UpdatedAt,
 	)
 
 	if err != nil {
@@ -117,7 +117,7 @@ func (r *UserRepository) Delete(id uuid.UUID) error {
 
 func (r *UserRepository) List(limit, offset int) ([]*domain.User, error) {
 	query := `
-		SELECT id, email, password_hash, first_name, last_name, status, email_verified, is_deleted, created_at, updated_at
+		SELECT id, email, password_hash, first_name, last_name, status, email_verified, is_deleted, is_system, created_at, updated_at
 		FROM users 
 		WHERE is_deleted = FALSE
 		ORDER BY created_at DESC
@@ -135,7 +135,7 @@ func (r *UserRepository) List(limit, offset int) ([]*domain.User, error) {
 		var user domain.User
 		err := rows.Scan(
 			&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
-			&user.Status, &user.EmailVerified, &user.IsDeleted, &user.CreatedAt, &user.UpdatedAt,
+			&user.Status, &user.EmailVerified, &user.IsDeleted, &user.IsSystem, &user.CreatedAt, &user.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err

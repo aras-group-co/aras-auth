@@ -31,13 +31,13 @@ func (r *RoleRepository) Create(role *domain.Role) error {
 
 func (r *RoleRepository) GetByID(id uuid.UUID) (*domain.Role, error) {
 	query := `
-		SELECT id, name, description, is_active, is_deleted, created_at, updated_at
+		SELECT id, name, description, is_active, is_deleted, is_system, created_at, updated_at
 		FROM roles WHERE id = $1 AND is_deleted = FALSE
 	`
 
 	var role domain.Role
 	err := r.db.QueryRow(context.Background(), query, id).Scan(
-		&role.ID, &role.Name, &role.Description, &role.IsActive, &role.IsDeleted, &role.CreatedAt, &role.UpdatedAt,
+		&role.ID, &role.Name, &role.Description, &role.IsActive, &role.IsDeleted, &role.IsSystem, &role.CreatedAt, &role.UpdatedAt,
 	)
 
 	if err != nil {
@@ -52,13 +52,13 @@ func (r *RoleRepository) GetByID(id uuid.UUID) (*domain.Role, error) {
 
 func (r *RoleRepository) GetByName(name string) (*domain.Role, error) {
 	query := `
-		SELECT id, name, description, is_active, is_deleted, created_at, updated_at
+		SELECT id, name, description, is_active, is_deleted, is_system, created_at, updated_at
 		FROM roles WHERE name = $1 AND is_deleted = FALSE
 	`
 
 	var role domain.Role
 	err := r.db.QueryRow(context.Background(), query, name).Scan(
-		&role.ID, &role.Name, &role.Description, &role.IsActive, &role.IsDeleted, &role.CreatedAt, &role.UpdatedAt,
+		&role.ID, &role.Name, &role.Description, &role.IsActive, &role.IsDeleted, &role.IsSystem, &role.CreatedAt, &role.UpdatedAt,
 	)
 
 	if err != nil {
@@ -111,7 +111,7 @@ func (r *RoleRepository) Delete(id uuid.UUID) error {
 
 func (r *RoleRepository) List(limit, offset int) ([]*domain.Role, error) {
 	query := `
-		SELECT id, name, description, is_active, is_deleted, created_at, updated_at
+		SELECT id, name, description, is_active, is_deleted, is_system, created_at, updated_at
 		FROM roles 
 		WHERE is_deleted = FALSE
 		ORDER BY created_at DESC
@@ -128,7 +128,7 @@ func (r *RoleRepository) List(limit, offset int) ([]*domain.Role, error) {
 	for rows.Next() {
 		var role domain.Role
 		err := rows.Scan(
-			&role.ID, &role.Name, &role.Description, &role.IsActive, &role.IsDeleted, &role.CreatedAt, &role.UpdatedAt,
+			&role.ID, &role.Name, &role.Description, &role.IsActive, &role.IsDeleted, &role.IsSystem, &role.CreatedAt, &role.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err

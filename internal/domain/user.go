@@ -24,6 +24,7 @@ type User struct {
 	Status        UserStatus `json:"status" db:"status"`
 	EmailVerified bool       `json:"email_verified" db:"email_verified"`
 	IsDeleted     bool       `json:"is_deleted" db:"is_deleted"`
+	IsSystem      bool       `json:"is_system" db:"is_system"`
 	CreatedAt     time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at" db:"updated_at"`
 }

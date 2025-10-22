@@ -7,13 +7,14 @@ import (
 )
 
 type Group struct {
-	ID          uuid.UUID  `json:"id" db:"id"`
-	Name        string     `json:"name" db:"name" validate:"required,min=1,max=100"`
-	Description string     `json:"description" db:"description"`
-	IsActive    bool       `json:"is_active" db:"is_active"`
-	IsDeleted   bool       `json:"is_deleted" db:"is_deleted"`
-	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
+	ID          uuid.UUID `json:"id" db:"id"`
+	Name        string    `json:"name" db:"name" validate:"required,min=1,max=100"`
+	Description string    `json:"description" db:"description"`
+	IsActive    bool      `json:"is_active" db:"is_active"`
+	IsDeleted   bool      `json:"is_deleted" db:"is_deleted"`
+	IsSystem    bool      `json:"is_system" db:"is_system"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type CreateGroupRequest struct {
