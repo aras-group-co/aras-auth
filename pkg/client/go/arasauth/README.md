@@ -264,6 +264,18 @@ hasPermission, err := client.CheckPermission(ctx, userID, "users", "read")
 
 ### Core Models
 
+All core models (`User`, `Group`, `Role`, `Permission`) now include the following status fields:
+
+- **`is_active`** (Groups, Roles, Permissions): Indicates if the entity is currently active. Inactive entities are not used in permission checks or authorization.
+- **`is_deleted`** (All entities): Soft delete flag. Deleted entities are filtered out from all queries and do not participate in authorization.
+- **`is_system`** (All entities): Indicates if the entity is a system-level resource (created during seeding). Frontend applications should prevent users from modifying or deleting system records.
+
+#### Important Notes on Authorization:
+- Only **active** and **non-deleted** roles, groups, and permissions grant access
+- Users with all inactive roles will have no permissions
+- Inactive groups do not grant their associated permissions
+- The system filters out inactive/deleted entities automatically in permission checks
+
 ```go
 type User struct {
     ID            string `json:"id"`
@@ -272,6 +284,8 @@ type User struct {
     LastName      string `json:"last_name"`
     Status        string `json:"status"`
     EmailVerified bool   `json:"email_verified"`
+    IsDeleted     bool   `json:"is_deleted"`
+    IsSystem      bool   `json:"is_system"`
     CreatedAt     string `json:"created_at"`
     UpdatedAt     string `json:"updated_at"`
 }
@@ -280,6 +294,9 @@ type Group struct {
     ID          string `json:"id"`
     Name        string `json:"name"`
     Description string `json:"description"`
+    IsActive    bool   `json:"is_active"`
+    IsDeleted   bool   `json:"is_deleted"`
+    IsSystem    bool   `json:"is_system"`
     CreatedAt   string `json:"created_at"`
     UpdatedAt   string `json:"updated_at"`
 }
@@ -288,6 +305,9 @@ type Role struct {
     ID          string `json:"id"`
     Name        string `json:"name"`
     Description string `json:"description"`
+    IsActive    bool   `json:"is_active"`
+    IsDeleted   bool   `json:"is_deleted"`
+    IsSystem    bool   `json:"is_system"`
     CreatedAt   string `json:"created_at"`
     UpdatedAt   string `json:"updated_at"`
 }
@@ -297,6 +317,9 @@ type Permission struct {
     Resource    string `json:"resource"`
     Action      string `json:"action"`
     Description string `json:"description"`
+    IsActive    bool   `json:"is_active"`
+    IsDeleted   bool   `json:"is_deleted"`
+    IsSystem    bool   `json:"is_system"`
     CreatedAt   string `json:"created_at"`
     UpdatedAt   string `json:"updated_at"`
 }

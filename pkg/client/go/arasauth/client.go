@@ -49,6 +49,7 @@ type User struct {
 	LastName      string `json:"last_name"`
 	Status        string `json:"status"`
 	EmailVerified bool   `json:"email_verified"`
+	IsDeleted     bool   `json:"is_deleted"`
 	IsSystem      bool   `json:"is_system"`
 	CreatedAt     string `json:"created_at"`
 	UpdatedAt     string `json:"updated_at"`
@@ -60,6 +61,7 @@ type Group struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	IsActive    bool   `json:"is_active"`
+	IsDeleted   bool   `json:"is_deleted"`
 	IsSystem    bool   `json:"is_system"`
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
@@ -71,6 +73,7 @@ type Role struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	IsActive    bool   `json:"is_active"`
+	IsDeleted   bool   `json:"is_deleted"`
 	IsSystem    bool   `json:"is_system"`
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
@@ -83,6 +86,7 @@ type Permission struct {
 	Action      string `json:"action"`
 	Description string `json:"description"`
 	IsActive    bool   `json:"is_active"`
+	IsDeleted   bool   `json:"is_deleted"`
 	IsSystem    bool   `json:"is_system"`
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`

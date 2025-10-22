@@ -15,6 +15,7 @@ class User:
     last_name: str
     status: str
     email_verified: bool
+    is_deleted: bool = False
     is_system: bool = False
     created_at: str = ''
     updated_at: str = ''
@@ -29,6 +30,7 @@ class User:
             last_name=data.get('last_name', ''),
             status=data.get('status', ''),
             email_verified=data.get('email_verified', False),
+            is_deleted=data.get('is_deleted', False),
             is_system=data.get('is_system', False),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')
@@ -42,6 +44,7 @@ class Group:
     name: str
     description: str
     is_active: bool = True
+    is_deleted: bool = False
     is_system: bool = False
     created_at: str = ''
     updated_at: str = ''
@@ -54,6 +57,7 @@ class Group:
             name=data.get('name', ''),
             description=data.get('description', ''),
             is_active=data.get('is_active', True),
+            is_deleted=data.get('is_deleted', False),
             is_system=data.get('is_system', False),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')
@@ -67,6 +71,7 @@ class Role:
     name: str
     description: str
     is_active: bool = True
+    is_deleted: bool = False
     is_system: bool = False
     created_at: str = ''
     updated_at: str = ''
@@ -79,6 +84,7 @@ class Role:
             name=data.get('name', ''),
             description=data.get('description', ''),
             is_active=data.get('is_active', True),
+            is_deleted=data.get('is_deleted', False),
             is_system=data.get('is_system', False),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')
@@ -93,6 +99,7 @@ class Permission:
     action: str
     description: str
     is_active: bool = True
+    is_deleted: bool = False
     is_system: bool = False
     created_at: str = ''
     updated_at: str = ''
@@ -106,6 +113,7 @@ class Permission:
             action=data.get('action', ''),
             description=data.get('description', ''),
             is_active=data.get('is_active', True),
+            is_deleted=data.get('is_deleted', False),
             is_system=data.get('is_system', False),
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', '')

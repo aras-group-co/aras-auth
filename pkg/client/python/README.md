@@ -157,6 +157,18 @@ AuthClient(base_url: str, timeout: int = 30)
 
 ## Models
 
+All core models (`User`, `Group`, `Role`, `Permission`) now include the following status fields:
+
+- **`is_active`** (Groups, Roles, Permissions): Indicates if the entity is currently active. Inactive entities are not used in permission checks or authorization.
+- **`is_deleted`** (All entities): Soft delete flag. Deleted entities are filtered out from all queries and do not participate in authorization.
+- **`is_system`** (All entities): Indicates if the entity is a system-level resource (created during seeding). Frontend applications should prevent users from modifying or deleting system records.
+
+#### Important Notes on Authorization:
+- Only **active** and **non-deleted** roles, groups, and permissions grant access
+- Users with all inactive roles will have no permissions
+- Inactive groups do not grant their associated permissions
+- The system filters out inactive/deleted entities automatically in permission checks
+
 ### User
 
 ```python
@@ -168,8 +180,10 @@ class User:
     last_name: str
     status: str
     email_verified: bool
-    created_at: str
-    updated_at: str
+    is_deleted: bool = False
+    is_system: bool = False
+    created_at: str = ''
+    updated_at: str = ''
 ```
 
 ### Group
@@ -180,8 +194,11 @@ class Group:
     id: str
     name: str
     description: str
-    created_at: str
-    updated_at: str
+    is_active: bool = True
+    is_deleted: bool = False
+    is_system: bool = False
+    created_at: str = ''
+    updated_at: str = ''
 ```
 
 ### Role
@@ -192,8 +209,11 @@ class Role:
     id: str
     name: str
     description: str
-    created_at: str
-    updated_at: str
+    is_active: bool = True
+    is_deleted: bool = False
+    is_system: bool = False
+    created_at: str = ''
+    updated_at: str = ''
 ```
 
 ### Permission
@@ -205,8 +225,11 @@ class Permission:
     resource: str
     action: str
     description: str
-    created_at: str
-    updated_at: str
+    is_active: bool = True
+    is_deleted: bool = False
+    is_system: bool = False
+    created_at: str = ''
+    updated_at: str = ''
 ```
 
 ### AuthResponse
