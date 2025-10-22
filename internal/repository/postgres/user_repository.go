@@ -78,12 +78,12 @@ func (r *UserRepository) GetByEmail(email string) (*domain.User, error) {
 func (r *UserRepository) Update(user *domain.User) error {
 	query := `
 		UPDATE users 
-		SET email = $2, first_name = $3, last_name = $4, status = $5, email_verified = $6, updated_at = NOW()
+		SET first_name = $2, last_name = $3, status = $4, email_verified = $5, updated_at = NOW()
 		WHERE id = $1
 	`
 
 	result, err := r.db.Exec(context.Background(), query,
-		user.ID, user.Email, user.FirstName, user.LastName, user.Status, user.EmailVerified)
+		user.ID, user.FirstName, user.LastName, user.Status, user.EmailVerified)
 
 	if err != nil {
 		return err
