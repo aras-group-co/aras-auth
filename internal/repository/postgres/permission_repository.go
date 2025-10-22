@@ -175,10 +175,12 @@ func (r *PermissionRepository) RemoveFromRole(roleID, permissionID uuid.UUID) er
 
 func (r *PermissionRepository) GetRolePermissions(roleID uuid.UUID) ([]*domain.Permission, error) {
 	query := `
-		SELECT p.id, p.resource, p.action, p.description, p.created_at, p.updated_at
+		SELECT p.id, p.resource, p.action, p.description, p.is_active, p.is_deleted, p.is_system, p.created_at, p.updated_at
 		FROM permissions p
 		INNER JOIN role_permissions rp ON p.id = rp.permission_id
 		WHERE rp.role_id = $1
+		  AND p.is_deleted = FALSE
+		  AND p.is_active = TRUE
 		ORDER BY p.created_at ASC
 	`
 
@@ -192,7 +194,7 @@ func (r *PermissionRepository) GetRolePermissions(roleID uuid.UUID) ([]*domain.P
 	for rows.Next() {
 		var permission domain.Permission
 		err := rows.Scan(
-			&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.CreatedAt, &permission.UpdatedAt,
+			&permission.ID, &permission.Resource, &permission.Action, &permission.Description, &permission.IsActive, &permission.IsDeleted, &permission.IsSystem, &permission.CreatedAt, &permission.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -208,17 +210,34 @@ func (r *PermissionRepository) CheckUserPermission(userID uuid.UUID, resource, a
 		SELECT COUNT(*) > 0
 		FROM permissions p
 		INNER JOIN role_permissions rp ON p.id = rp.permission_id
-		INNER JOIN user_roles ur ON rp.role_id = ur.role_id
-		WHERE ur.user_id = $1 AND p.resource = $2 AND p.action = $3
+		INNER JOIN roles r ON rp.role_id = r.id
+		INNER JOIN user_roles ur ON r.id = ur.role_id
+		WHERE ur.user_id = $1 
+		  AND p.resource = $2 
+		  AND p.action = $3
+		  AND p.is_deleted = FALSE
+		  AND p.is_active = TRUE
+		  AND r.is_deleted = FALSE
+		  AND r.is_active = TRUE
 		
 		UNION ALL
 		
 		SELECT COUNT(*) > 0
 		FROM permissions p
 		INNER JOIN role_permissions rp ON p.id = rp.permission_id
-		INNER JOIN group_roles gr ON rp.role_id = gr.role_id
-		INNER JOIN user_groups ug ON gr.group_id = ug.group_id
-		WHERE ug.user_id = $1 AND p.resource = $2 AND p.action = $3
+		INNER JOIN roles r ON rp.role_id = r.id
+		INNER JOIN group_roles gr ON r.id = gr.role_id
+		INNER JOIN groups g ON gr.group_id = g.id
+		INNER JOIN user_groups ug ON g.id = ug.group_id
+		WHERE ug.user_id = $1 
+		  AND p.resource = $2 
+		  AND p.action = $3
+		  AND p.is_deleted = FALSE
+		  AND p.is_active = TRUE
+		  AND r.is_deleted = FALSE
+		  AND r.is_active = TRUE
+		  AND g.is_deleted = FALSE
+		  AND g.is_active = TRUE
 	`
 
 	rows, err := r.db.Query(context.Background(), query, userID, resource, action)

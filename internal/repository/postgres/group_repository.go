@@ -154,10 +154,11 @@ func (r *GroupRepository) RemoveMember(groupID, userID uuid.UUID) error {
 
 func (r *GroupRepository) GetMembers(groupID uuid.UUID) ([]*domain.User, error) {
 	query := `
-		SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name, u.status, u.email_verified, u.created_at, u.updated_at
+		SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name, u.status, u.email_verified, u.is_deleted, u.is_system, u.created_at, u.updated_at
 		FROM users u
 		INNER JOIN user_groups ug ON u.id = ug.user_id
 		WHERE ug.group_id = $1
+		  AND u.is_deleted = FALSE
 		ORDER BY u.created_at ASC
 	`
 
@@ -172,7 +173,7 @@ func (r *GroupRepository) GetMembers(groupID uuid.UUID) ([]*domain.User, error) 
 		var user domain.User
 		err := rows.Scan(
 			&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
-			&user.Status, &user.EmailVerified, &user.CreatedAt, &user.UpdatedAt,
+			&user.Status, &user.EmailVerified, &user.IsDeleted, &user.IsSystem, &user.CreatedAt, &user.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -185,10 +186,12 @@ func (r *GroupRepository) GetMembers(groupID uuid.UUID) ([]*domain.User, error) 
 
 func (r *GroupRepository) GetUserGroups(userID uuid.UUID) ([]*domain.Group, error) {
 	query := `
-		SELECT g.id, g.name, g.description, g.created_at, g.updated_at
+		SELECT g.id, g.name, g.description, g.is_active, g.is_deleted, g.is_system, g.created_at, g.updated_at
 		FROM groups g
 		INNER JOIN user_groups ug ON g.id = ug.group_id
 		WHERE ug.user_id = $1
+		  AND g.is_deleted = FALSE
+		  AND g.is_active = TRUE
 		ORDER BY g.created_at ASC
 	`
 
@@ -202,7 +205,7 @@ func (r *GroupRepository) GetUserGroups(userID uuid.UUID) ([]*domain.Group, erro
 	for rows.Next() {
 		var group domain.Group
 		err := rows.Scan(
-			&group.ID, &group.Name, &group.Description, &group.CreatedAt, &group.UpdatedAt,
+			&group.ID, &group.Name, &group.Description, &group.IsActive, &group.IsDeleted, &group.IsSystem, &group.CreatedAt, &group.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err

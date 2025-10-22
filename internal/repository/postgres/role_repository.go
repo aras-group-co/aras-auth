@@ -201,10 +201,12 @@ func (r *RoleRepository) RemoveFromGroup(groupID, roleID uuid.UUID) error {
 
 func (r *RoleRepository) GetUserRoles(userID uuid.UUID) ([]*domain.Role, error) {
 	query := `
-		SELECT r.id, r.name, r.description, r.created_at, r.updated_at
+		SELECT r.id, r.name, r.description, r.is_active, r.is_deleted, r.is_system, r.created_at, r.updated_at
 		FROM roles r
 		INNER JOIN user_roles ur ON r.id = ur.role_id
 		WHERE ur.user_id = $1
+		  AND r.is_deleted = FALSE
+		  AND r.is_active = TRUE
 		ORDER BY r.created_at ASC
 	`
 
@@ -218,7 +220,7 @@ func (r *RoleRepository) GetUserRoles(userID uuid.UUID) ([]*domain.Role, error) 
 	for rows.Next() {
 		var role domain.Role
 		err := rows.Scan(
-			&role.ID, &role.Name, &role.Description, &role.CreatedAt, &role.UpdatedAt,
+			&role.ID, &role.Name, &role.Description, &role.IsActive, &role.IsDeleted, &role.IsSystem, &role.CreatedAt, &role.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -231,10 +233,12 @@ func (r *RoleRepository) GetUserRoles(userID uuid.UUID) ([]*domain.Role, error) 
 
 func (r *RoleRepository) GetGroupRoles(groupID uuid.UUID) ([]*domain.Role, error) {
 	query := `
-		SELECT r.id, r.name, r.description, r.created_at, r.updated_at
+		SELECT r.id, r.name, r.description, r.is_active, r.is_deleted, r.is_system, r.created_at, r.updated_at
 		FROM roles r
 		INNER JOIN group_roles gr ON r.id = gr.role_id
 		WHERE gr.group_id = $1
+		  AND r.is_deleted = FALSE
+		  AND r.is_active = TRUE
 		ORDER BY r.created_at ASC
 	`
 
@@ -248,7 +252,7 @@ func (r *RoleRepository) GetGroupRoles(groupID uuid.UUID) ([]*domain.Role, error
 	for rows.Next() {
 		var role domain.Role
 		err := rows.Scan(
-			&role.ID, &role.Name, &role.Description, &role.CreatedAt, &role.UpdatedAt,
+			&role.ID, &role.Name, &role.Description, &role.IsActive, &role.IsDeleted, &role.IsSystem, &role.CreatedAt, &role.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
