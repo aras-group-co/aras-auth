@@ -21,11 +21,14 @@ func NewPermissionRepository(db *pgxpool.Pool) domain.PermissionRepository {
 
 func (r *PermissionRepository) Create(permission *domain.Permission) error {
 	query := `
-		INSERT INTO permissions (id, resource, action, description)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO permissions (id, resource, action, description, is_active, is_deleted, is_system, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 
-	_, err := r.db.Exec(context.Background(), query, permission.ID, permission.Resource, permission.Action, permission.Description)
+	_, err := r.db.Exec(context.Background(), query,
+		permission.ID, permission.Resource, permission.Action, permission.Description,
+		permission.IsActive, permission.IsDeleted, permission.IsSystem,
+		permission.CreatedAt, permission.UpdatedAt)
 	return err
 }
 
@@ -74,11 +77,11 @@ func (r *PermissionRepository) GetByResourceAndAction(resource, action string) (
 func (r *PermissionRepository) Update(permission *domain.Permission) error {
 	query := `
 		UPDATE permissions 
-		SET resource = $2, action = $3, description = $4, updated_at = NOW()
+		SET resource = $2, action = $3, description = $4, is_active = $5, updated_at = NOW()
 		WHERE id = $1
 	`
 
-	result, err := r.db.Exec(context.Background(), query, permission.ID, permission.Resource, permission.Action, permission.Description)
+	result, err := r.db.Exec(context.Background(), query, permission.ID, permission.Resource, permission.Action, permission.Description, permission.IsActive)
 	if err != nil {
 		return err
 	}

@@ -21,11 +21,14 @@ func NewRoleRepository(db *pgxpool.Pool) domain.RoleRepository {
 
 func (r *RoleRepository) Create(role *domain.Role) error {
 	query := `
-		INSERT INTO roles (id, name, description)
-		VALUES ($1, $2, $3)
+		INSERT INTO roles (id, name, description, is_active, is_deleted, is_system, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 
-	_, err := r.db.Exec(context.Background(), query, role.ID, role.Name, role.Description)
+	_, err := r.db.Exec(context.Background(), query,
+		role.ID, role.Name, role.Description,
+		role.IsActive, role.IsDeleted, role.IsSystem,
+		role.CreatedAt, role.UpdatedAt)
 	return err
 }
 
@@ -74,11 +77,11 @@ func (r *RoleRepository) GetByName(name string) (*domain.Role, error) {
 func (r *RoleRepository) Update(role *domain.Role) error {
 	query := `
 		UPDATE roles 
-		SET name = $2, description = $3, updated_at = NOW()
+		SET name = $2, description = $3, is_active = $4, updated_at = NOW()
 		WHERE id = $1
 	`
 
-	result, err := r.db.Exec(context.Background(), query, role.ID, role.Name, role.Description)
+	result, err := r.db.Exec(context.Background(), query, role.ID, role.Name, role.Description, role.IsActive)
 	if err != nil {
 		return err
 	}

@@ -21,12 +21,13 @@ func NewUserRepository(db *pgxpool.Pool) domain.UserRepository {
 
 func (r *UserRepository) Create(user *domain.User) error {
 	query := `
-		INSERT INTO users (id, email, password_hash, first_name, last_name, status, email_verified)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO users (id, email, password_hash, first_name, last_name, status, email_verified, is_deleted, is_system, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	`
 
 	_, err := r.db.Exec(context.Background(), query,
-		user.ID, user.Email, user.PasswordHash, user.FirstName, user.LastName, user.Status, user.EmailVerified)
+		user.ID, user.Email, user.PasswordHash, user.FirstName, user.LastName, user.Status, user.EmailVerified,
+		user.IsDeleted, user.IsSystem, user.CreatedAt, user.UpdatedAt)
 
 	return err
 }

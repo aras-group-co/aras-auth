@@ -21,11 +21,14 @@ func NewGroupRepository(db *pgxpool.Pool) domain.GroupRepository {
 
 func (r *GroupRepository) Create(group *domain.Group) error {
 	query := `
-		INSERT INTO groups (id, name, description)
-		VALUES ($1, $2, $3)
+		INSERT INTO groups (id, name, description, is_active, is_deleted, is_system, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 
-	_, err := r.db.Exec(context.Background(), query, group.ID, group.Name, group.Description)
+	_, err := r.db.Exec(context.Background(), query,
+		group.ID, group.Name, group.Description,
+		group.IsActive, group.IsDeleted, group.IsSystem,
+		group.CreatedAt, group.UpdatedAt)
 	return err
 }
 
@@ -53,11 +56,11 @@ func (r *GroupRepository) GetByID(id uuid.UUID) (*domain.Group, error) {
 func (r *GroupRepository) Update(group *domain.Group) error {
 	query := `
 		UPDATE groups 
-		SET name = $2, description = $3, updated_at = NOW()
+		SET name = $2, description = $3, is_active = $4, updated_at = NOW()
 		WHERE id = $1
 	`
 
-	result, err := r.db.Exec(context.Background(), query, group.ID, group.Name, group.Description)
+	result, err := r.db.Exec(context.Background(), query, group.ID, group.Name, group.Description, group.IsActive)
 	if err != nil {
 		return err
 	}
