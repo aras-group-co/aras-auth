@@ -20,11 +20,13 @@ type Group struct {
 type CreateGroupRequest struct {
 	Name        string `json:"name" validate:"required,min=1,max=100"`
 	Description string `json:"description"`
+	IsActive    *bool  `json:"is_active,omitempty"` // optional, default true
 }
 
 type UpdateGroupRequest struct {
 	Name        *string `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
 	Description *string `json:"description,omitempty"`
+	IsActive    *bool   `json:"is_active,omitempty"`
 }
 
 type AddMemberRequest struct {

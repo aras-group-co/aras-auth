@@ -287,13 +287,14 @@ class AuthClient:
         
         return ListResponse.from_dict(groups_data, Group)
     
-    def create_group(self, name: str, description: str = '') -> Group:
+    def create_group(self, name: str, description: str = '', is_active: Optional[bool] = None) -> Group:
         """
         Create a new group
         
         Args:
             name: Group name
             description: Group description
+            is_active: Whether the group is active (default: True)
             
         Returns:
             Created group
@@ -302,6 +303,8 @@ class AuthClient:
             'name': name,
             'description': description
         }
+        if is_active is not None:
+            data['is_active'] = is_active
         
         response_data = self._make_request('POST', '/api/v1/groups', data)
         group_data = self._handle_response(response_data)
@@ -403,13 +406,14 @@ class AuthClient:
         
         return ListResponse.from_dict(roles_data, Role)
     
-    def create_role(self, name: str, description: str = '') -> Role:
+    def create_role(self, name: str, description: str = '', is_active: Optional[bool] = None) -> Role:
         """
         Create a new role
         
         Args:
             name: Role name
             description: Role description
+            is_active: Whether the role is active (default: True)
             
         Returns:
             Created role
@@ -418,6 +422,8 @@ class AuthClient:
             'name': name,
             'description': description
         }
+        if is_active is not None:
+            data['is_active'] = is_active
         
         response_data = self._make_request('POST', '/api/v1/roles', data)
         role_data = self._handle_response(response_data)
@@ -555,7 +561,7 @@ class AuthClient:
         
         return ListResponse.from_dict(permissions_data, Permission)
     
-    def create_permission(self, resource: str, action: str, description: str = '') -> Permission:
+    def create_permission(self, resource: str, action: str, description: str = '', is_active: Optional[bool] = None) -> Permission:
         """
         Create a new permission
         
@@ -563,6 +569,7 @@ class AuthClient:
             resource: Resource name
             action: Action name
             description: Permission description
+            is_active: Whether the permission is active (default: True)
             
         Returns:
             Created permission
@@ -572,6 +579,8 @@ class AuthClient:
             'action': action,
             'description': description
         }
+        if is_active is not None:
+            data['is_active'] = is_active
         
         response_data = self._make_request('POST', '/api/v1/permissions', data)
         permission_data = self._handle_response(response_data)

@@ -47,11 +47,17 @@ client.delete_user("user-id")
 ### Group Management
 
 ```python
-# Create group
+# Create active group (default)
 group = client.create_group("Developers", "Development team")
+
+# Create inactive group
+group = client.create_group("Archived", "Old team", is_active=False)
 
 # List groups
 groups_response = client.list_groups()
+
+# Update group status
+updated = client.update_group("group-id", is_active=True)
 
 # Add member to group
 client.add_member("group-id", "user-id")
@@ -63,11 +69,17 @@ members = client.get_members("group-id")
 ### Role-Based Access Control
 
 ```python
-# Create role
+# Create active role (default)
 role = client.create_role("admin", "Administrator role")
 
-# Create permission
+# Create inactive role
+role = client.create_role("archived", "Old role", is_active=False)
+
+# Create active permission (default)
 permission = client.create_permission("users", "read", "Read user information")
+
+# Create inactive permission
+permission = client.create_permission("old", "deprecated", "Old permission", is_active=False)
 
 # Assign permission to role
 client.assign_permission_to_role("role-id", "permission-id")

@@ -12,6 +12,7 @@ type CreatePermissionRequest struct {
 	Resource    string `json:"resource"`
 	Action      string `json:"action"`
 	Description string `json:"description"`
+	IsActive    *bool  `json:"is_active,omitempty"`
 }
 
 // UpdatePermissionRequest represents the request to update a permission
@@ -19,6 +20,7 @@ type UpdatePermissionRequest struct {
 	Resource    *string `json:"resource,omitempty"`
 	Action      *string `json:"action,omitempty"`
 	Description *string `json:"description,omitempty"`
+	IsActive    *bool   `json:"is_active,omitempty"`
 }
 
 // ListPermissionsResponse represents the response from listing permissions
@@ -30,11 +32,12 @@ type ListPermissionsResponse struct {
 }
 
 // CreatePermission creates a new permission
-func (c *Client) CreatePermission(ctx context.Context, resource, action, description string) (*Permission, error) {
+func (c *Client) CreatePermission(ctx context.Context, resource, action, description string, isActive *bool) (*Permission, error) {
 	req := CreatePermissionRequest{
 		Resource:    resource,
 		Action:      action,
 		Description: description,
+		IsActive:    isActive,
 	}
 
 	resp, err := c.makeRequest(ctx, "POST", "/api/v1/permissions", req)
@@ -65,6 +68,15 @@ func (c *Client) CreatePermission(ctx context.Context, resource, action, descrip
 	}
 	if description, ok := permissionData["description"].(string); ok {
 		permission.Description = description
+	}
+	if isActive, ok := permissionData["is_active"].(bool); ok {
+		permission.IsActive = isActive
+	}
+	if isDeleted, ok := permissionData["is_deleted"].(bool); ok {
+		permission.IsDeleted = isDeleted
+	}
+	if isSystem, ok := permissionData["is_system"].(bool); ok {
+		permission.IsSystem = isSystem
 	}
 	if createdAt, ok := permissionData["created_at"].(string); ok {
 		permission.CreatedAt = createdAt
@@ -181,6 +193,15 @@ func (c *Client) GetPermission(ctx context.Context, permissionID string) (*Permi
 	if description, ok := permissionData["description"].(string); ok {
 		permission.Description = description
 	}
+	if isActive, ok := permissionData["is_active"].(bool); ok {
+		permission.IsActive = isActive
+	}
+	if isDeleted, ok := permissionData["is_deleted"].(bool); ok {
+		permission.IsDeleted = isDeleted
+	}
+	if isSystem, ok := permissionData["is_system"].(bool); ok {
+		permission.IsSystem = isSystem
+	}
 	if createdAt, ok := permissionData["created_at"].(string); ok {
 		permission.CreatedAt = createdAt
 	}
@@ -223,6 +244,15 @@ func (c *Client) UpdatePermission(ctx context.Context, permissionID string, req 
 	}
 	if description, ok := permissionData["description"].(string); ok {
 		permission.Description = description
+	}
+	if isActive, ok := permissionData["is_active"].(bool); ok {
+		permission.IsActive = isActive
+	}
+	if isDeleted, ok := permissionData["is_deleted"].(bool); ok {
+		permission.IsDeleted = isDeleted
+	}
+	if isSystem, ok := permissionData["is_system"].(bool); ok {
+		permission.IsSystem = isSystem
 	}
 	if createdAt, ok := permissionData["created_at"].(string); ok {
 		permission.CreatedAt = createdAt

@@ -170,7 +170,7 @@ func (gw *APIGateway) HandleCreateRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Forward to auth service
-	role, err := gw.authClient.CreateRole(r.Context(), req.Name, req.Description)
+	role, err := gw.authClient.CreateRole(r.Context(), req.Name, req.Description, nil)
 	if err != nil {
 		http.Error(w, "Role creation failed", http.StatusBadRequest)
 		return

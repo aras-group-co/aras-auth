@@ -205,10 +205,13 @@ err = client.DeleteUser(ctx, userID)
 
 ```go
 // Group operations
-group, err := client.CreateGroup(ctx, "Developers", "Development team")
+group, err := client.CreateGroup(ctx, "Developers", "Development team", nil) // default active
+inactive := false
+group, err := client.CreateGroup(ctx, "Archived", "Old team", &inactive) // inactive group
 groups, err := client.ListGroups(ctx, page, limit)
 group, err := client.GetGroup(ctx, groupID)
-group, err := client.UpdateGroup(ctx, groupID, &UpdateGroupRequest{...})
+isActive := true
+group, err := client.UpdateGroup(ctx, groupID, &UpdateGroupRequest{IsActive: &isActive})
 err = client.DeleteGroup(ctx, groupID)
 
 // Group membership
@@ -221,10 +224,13 @@ members, err := client.GetMembers(ctx, groupID)
 
 ```go
 // Role operations
-role, err := client.CreateRole(ctx, "admin", "Administrator role")
+role, err := client.CreateRole(ctx, "admin", "Administrator role", nil) // default active
+inactive := false
+role, err := client.CreateRole(ctx, "archived", "Old role", &inactive) // inactive role
 roles, err := client.ListRoles(ctx, page, limit)
 role, err := client.GetRole(ctx, roleID)
-role, err := client.UpdateRole(ctx, roleID, &UpdateRoleRequest{...})
+isActive := true
+role, err := client.UpdateRole(ctx, roleID, &UpdateRoleRequest{IsActive: &isActive})
 err = client.DeleteRole(ctx, roleID)
 
 // Role permissions
@@ -237,10 +243,13 @@ permissions, err := client.GetRolePermissions(ctx, roleID)
 
 ```go
 // Permission operations
-permission, err := client.CreatePermission(ctx, "users", "read", "Read user information")
+permission, err := client.CreatePermission(ctx, "users", "read", "Read user information", nil) // default active
+inactive := false
+permission, err := client.CreatePermission(ctx, "old", "deprecated", "Old permission", &inactive) // inactive permission
 permissions, err := client.ListPermissions(ctx, page, limit)
 permission, err := client.GetPermission(ctx, permissionID)
-permission, err := client.UpdatePermission(ctx, permissionID, &UpdatePermissionRequest{...})
+isActive := true
+permission, err := client.UpdatePermission(ctx, permissionID, &UpdatePermissionRequest{IsActive: &isActive})
 err = client.DeletePermission(ctx, permissionID)
 ```
 

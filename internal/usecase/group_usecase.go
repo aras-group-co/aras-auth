@@ -28,10 +28,18 @@ type ListGroupsResponse struct {
 }
 
 func (uc *GroupUseCase) CreateGroup(ctx context.Context, req *domain.CreateGroupRequest) (*domain.Group, error) {
+	isActive := true // default
+	if req.IsActive != nil {
+		isActive = *req.IsActive
+	}
+
 	group := &domain.Group{
 		ID:          uuid.New(),
 		Name:        req.Name,
 		Description: req.Description,
+		IsActive:    isActive,
+		IsDeleted:   false,
+		IsSystem:    false,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
@@ -88,6 +96,9 @@ func (uc *GroupUseCase) UpdateGroup(ctx context.Context, groupID uuid.UUID, req 
 	}
 	if req.Description != nil {
 		group.Description = *req.Description
+	}
+	if req.IsActive != nil {
+		group.IsActive = *req.IsActive
 	}
 
 	// Save updated group

@@ -19,12 +19,14 @@ type ListGroupsResponse struct {
 type CreateGroupRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	IsActive    *bool  `json:"is_active,omitempty"`
 }
 
 // UpdateGroupRequest represents the request to update a group
 type UpdateGroupRequest struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
+	IsActive    *bool   `json:"is_active,omitempty"`
 }
 
 // AddMemberRequest represents the request to add a member to a group
@@ -87,6 +89,15 @@ func (c *Client) ListGroups(ctx context.Context, page, limit int) (*ListGroupsRe
 				if description, ok := groupMap["description"].(string); ok {
 					group.Description = description
 				}
+				if isActive, ok := groupMap["is_active"].(bool); ok {
+					group.IsActive = isActive
+				}
+				if isDeleted, ok := groupMap["is_deleted"].(bool); ok {
+					group.IsDeleted = isDeleted
+				}
+				if isSystem, ok := groupMap["is_system"].(bool); ok {
+					group.IsSystem = isSystem
+				}
 				if createdAt, ok := groupMap["created_at"].(string); ok {
 					group.CreatedAt = createdAt
 				}
@@ -102,10 +113,11 @@ func (c *Client) ListGroups(ctx context.Context, page, limit int) (*ListGroupsRe
 }
 
 // CreateGroup creates a new group
-func (c *Client) CreateGroup(ctx context.Context, name, description string) (*Group, error) {
+func (c *Client) CreateGroup(ctx context.Context, name, description string, isActive *bool) (*Group, error) {
 	req := CreateGroupRequest{
 		Name:        name,
 		Description: description,
+		IsActive:    isActive,
 	}
 
 	resp, err := c.makeRequest(ctx, "POST", "/api/v1/groups", req)
@@ -133,6 +145,15 @@ func (c *Client) CreateGroup(ctx context.Context, name, description string) (*Gr
 	}
 	if description, ok := groupData["description"].(string); ok {
 		group.Description = description
+	}
+	if isActive, ok := groupData["is_active"].(bool); ok {
+		group.IsActive = isActive
+	}
+	if isDeleted, ok := groupData["is_deleted"].(bool); ok {
+		group.IsDeleted = isDeleted
+	}
+	if isSystem, ok := groupData["is_system"].(bool); ok {
+		group.IsSystem = isSystem
 	}
 	if createdAt, ok := groupData["created_at"].(string); ok {
 		group.CreatedAt = createdAt
@@ -174,6 +195,15 @@ func (c *Client) GetGroup(ctx context.Context, groupID string) (*Group, error) {
 	if description, ok := groupData["description"].(string); ok {
 		group.Description = description
 	}
+	if isActive, ok := groupData["is_active"].(bool); ok {
+		group.IsActive = isActive
+	}
+	if isDeleted, ok := groupData["is_deleted"].(bool); ok {
+		group.IsDeleted = isDeleted
+	}
+	if isSystem, ok := groupData["is_system"].(bool); ok {
+		group.IsSystem = isSystem
+	}
 	if createdAt, ok := groupData["created_at"].(string); ok {
 		group.CreatedAt = createdAt
 	}
@@ -213,6 +243,15 @@ func (c *Client) UpdateGroup(ctx context.Context, groupID string, req *UpdateGro
 	}
 	if description, ok := groupData["description"].(string); ok {
 		group.Description = description
+	}
+	if isActive, ok := groupData["is_active"].(bool); ok {
+		group.IsActive = isActive
+	}
+	if isDeleted, ok := groupData["is_deleted"].(bool); ok {
+		group.IsDeleted = isDeleted
+	}
+	if isSystem, ok := groupData["is_system"].(bool); ok {
+		group.IsSystem = isSystem
 	}
 	if createdAt, ok := groupData["created_at"].(string); ok {
 		group.CreatedAt = createdAt
@@ -321,6 +360,12 @@ func (c *Client) GetMembers(ctx context.Context, groupID string) ([]*User, error
 			if emailVerified, ok := userMap["email_verified"].(bool); ok {
 				user.EmailVerified = emailVerified
 			}
+			if isDeleted, ok := userMap["is_deleted"].(bool); ok {
+				user.IsDeleted = isDeleted
+			}
+			if isSystem, ok := userMap["is_system"].(bool); ok {
+				user.IsSystem = isSystem
+			}
 			if createdAt, ok := userMap["created_at"].(string); ok {
 				user.CreatedAt = createdAt
 			}
@@ -333,5 +378,3 @@ func (c *Client) GetMembers(ctx context.Context, groupID string) ([]*User, error
 
 	return users, nil
 }
-
-

@@ -42,10 +42,18 @@ type CheckPermissionResponse struct {
 
 // Role management
 func (uc *AuthzUseCase) CreateRole(ctx context.Context, req *domain.CreateRoleRequest) (*domain.Role, error) {
+	isActive := true // default
+	if req.IsActive != nil {
+		isActive = *req.IsActive
+	}
+
 	role := &domain.Role{
 		ID:          uuid.New(),
 		Name:        req.Name,
 		Description: req.Description,
+		IsActive:    isActive,
+		IsDeleted:   false,
+		IsSystem:    false,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
@@ -103,6 +111,9 @@ func (uc *AuthzUseCase) UpdateRole(ctx context.Context, roleID uuid.UUID, req *d
 	if req.Description != nil {
 		role.Description = *req.Description
 	}
+	if req.IsActive != nil {
+		role.IsActive = *req.IsActive
+	}
 
 	// Save updated role
 	if err := uc.roleRepo.Update(role); err != nil {
@@ -149,11 +160,19 @@ func (uc *AuthzUseCase) GetGroupRoles(ctx context.Context, groupID uuid.UUID) ([
 
 // Permission management
 func (uc *AuthzUseCase) CreatePermission(ctx context.Context, req *domain.CreatePermissionRequest) (*domain.Permission, error) {
+	isActive := true // default
+	if req.IsActive != nil {
+		isActive = *req.IsActive
+	}
+
 	permission := &domain.Permission{
 		ID:          uuid.New(),
 		Resource:    req.Resource,
 		Action:      req.Action,
 		Description: req.Description,
+		IsActive:    isActive,
+		IsDeleted:   false,
+		IsSystem:    false,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
@@ -213,6 +232,9 @@ func (uc *AuthzUseCase) UpdatePermission(ctx context.Context, permissionID uuid.
 	}
 	if req.Description != nil {
 		permission.Description = *req.Description
+	}
+	if req.IsActive != nil {
+		permission.IsActive = *req.IsActive
 	}
 
 	// Save updated permission

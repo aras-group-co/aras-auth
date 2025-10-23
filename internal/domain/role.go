@@ -20,11 +20,13 @@ type Role struct {
 type CreateRoleRequest struct {
 	Name        string `json:"name" validate:"required,min=1,max=100"`
 	Description string `json:"description"`
+	IsActive    *bool  `json:"is_active,omitempty"` // optional, default true
 }
 
 type UpdateRoleRequest struct {
 	Name        *string `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
 	Description *string `json:"description,omitempty"`
+	IsActive    *bool   `json:"is_active,omitempty"`
 }
 
 type AssignRoleRequest struct {

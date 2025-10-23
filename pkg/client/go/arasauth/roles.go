@@ -11,12 +11,14 @@ import (
 type CreateRoleRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	IsActive    *bool  `json:"is_active,omitempty"`
 }
 
 // UpdateRoleRequest represents the request to update a role
 type UpdateRoleRequest struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
+	IsActive    *bool   `json:"is_active,omitempty"`
 }
 
 // ListRolesResponse represents the response from listing roles
@@ -33,10 +35,11 @@ type AssignPermissionRequest struct {
 }
 
 // CreateRole creates a new role
-func (c *Client) CreateRole(ctx context.Context, name, description string) (*Role, error) {
+func (c *Client) CreateRole(ctx context.Context, name, description string, isActive *bool) (*Role, error) {
 	req := CreateRoleRequest{
 		Name:        name,
 		Description: description,
+		IsActive:    isActive,
 	}
 
 	resp, err := c.makeRequest(ctx, "POST", "/api/v1/roles", req)
@@ -64,6 +67,15 @@ func (c *Client) CreateRole(ctx context.Context, name, description string) (*Rol
 	}
 	if description, ok := roleData["description"].(string); ok {
 		role.Description = description
+	}
+	if isActive, ok := roleData["is_active"].(bool); ok {
+		role.IsActive = isActive
+	}
+	if isDeleted, ok := roleData["is_deleted"].(bool); ok {
+		role.IsDeleted = isDeleted
+	}
+	if isSystem, ok := roleData["is_system"].(bool); ok {
+		role.IsSystem = isSystem
 	}
 	if createdAt, ok := roleData["created_at"].(string); ok {
 		role.CreatedAt = createdAt
@@ -174,6 +186,15 @@ func (c *Client) GetRole(ctx context.Context, roleID string) (*Role, error) {
 	if description, ok := roleData["description"].(string); ok {
 		role.Description = description
 	}
+	if isActive, ok := roleData["is_active"].(bool); ok {
+		role.IsActive = isActive
+	}
+	if isDeleted, ok := roleData["is_deleted"].(bool); ok {
+		role.IsDeleted = isDeleted
+	}
+	if isSystem, ok := roleData["is_system"].(bool); ok {
+		role.IsSystem = isSystem
+	}
 	if createdAt, ok := roleData["created_at"].(string); ok {
 		role.CreatedAt = createdAt
 	}
@@ -213,6 +234,15 @@ func (c *Client) UpdateRole(ctx context.Context, roleID string, req *UpdateRoleR
 	}
 	if description, ok := roleData["description"].(string); ok {
 		role.Description = description
+	}
+	if isActive, ok := roleData["is_active"].(bool); ok {
+		role.IsActive = isActive
+	}
+	if isDeleted, ok := roleData["is_deleted"].(bool); ok {
+		role.IsDeleted = isDeleted
+	}
+	if isSystem, ok := roleData["is_system"].(bool); ok {
+		role.IsSystem = isSystem
 	}
 	if createdAt, ok := roleData["created_at"].(string); ok {
 		role.CreatedAt = createdAt
@@ -314,6 +344,15 @@ func (c *Client) GetRolePermissions(ctx context.Context, roleID string) ([]*Perm
 			}
 			if description, ok := permissionMap["description"].(string); ok {
 				permission.Description = description
+			}
+			if isActive, ok := permissionMap["is_active"].(bool); ok {
+				permission.IsActive = isActive
+			}
+			if isDeleted, ok := permissionMap["is_deleted"].(bool); ok {
+				permission.IsDeleted = isDeleted
+			}
+			if isSystem, ok := permissionMap["is_system"].(bool); ok {
+				permission.IsSystem = isSystem
 			}
 			if createdAt, ok := permissionMap["created_at"].(string); ok {
 				permission.CreatedAt = createdAt

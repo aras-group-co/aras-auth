@@ -22,12 +22,14 @@ type CreatePermissionRequest struct {
 	Resource    string `json:"resource" validate:"required,min=1,max=100"`
 	Action      string `json:"action" validate:"required,min=1,max=100"`
 	Description string `json:"description"`
+	IsActive    *bool  `json:"is_active,omitempty"` // optional, default true
 }
 
 type UpdatePermissionRequest struct {
 	Resource    *string `json:"resource,omitempty" validate:"omitempty,min=1,max=100"`
 	Action      *string `json:"action,omitempty" validate:"omitempty,min=1,max=100"`
 	Description *string `json:"description,omitempty"`
+	IsActive    *bool   `json:"is_active,omitempty"`
 }
 
 type AssignPermissionRequest struct {
